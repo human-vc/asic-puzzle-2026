@@ -1,0 +1,28 @@
+# Bounded sequential equivalence: reconstructed RTL vs the netlist extracted
+# from puzzle.gds. Both are driven from reset with free enable/I every cycle.
+
+read_verilog cells_behav.v
+read_verilog puzzle_extracted.v
+hierarchy -top puzzle
+proc
+flatten
+opt_clean
+rename puzzle gate
+
+design -stash gatedesign
+
+read_verilog -sv puzzle_rtl.v
+hierarchy -top puzzle_rtl
+proc
+flatten
+opt
+rename puzzle_rtl gold
+
+design -copy-from gatedesign -as gate gate
+
+miter -equiv -flatten -make_assert -ignore_gold_x gold gate miter
+hierarchy -top miter
+async2sync
+opt -fast
+
+stat
