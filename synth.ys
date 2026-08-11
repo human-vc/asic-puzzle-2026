@@ -1,0 +1,10 @@
+# Round trip: synthesize the reconstructed RTL onto the same cell set the die
+# uses, mapping with a Liberty derived from the die itself.
+read_verilog -sv puzzle_rtl.v
+hierarchy -top puzzle_rtl
+synth -top puzzle_rtl -flatten
+dfflibmap -liberty sky130_hd_measured.lib
+abc -liberty sky130_hd_measured.lib
+opt_clean
+write_verilog -noattr puzzle_resynth.v
+stat -liberty sky130_hd_measured.lib
