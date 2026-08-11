@@ -1,0 +1,22 @@
+# environments and build output
+.venv/
+__pycache__/
+hardcaml/_build/
+*.vvp
+
+# fetched third-party cell models (tools/fetch_pdk.sh reproduces these)
+pdk/
+
+# regenerable intermediates
+puzzle_net.json
+resynth_net.json
+extract2_sites.json
+placement.json
+blocks.json
+figure_data.json
+extract2_sites.json
+puzzle_extracted.v
+puzzle_resynth.v
+starbattle_hardcaml.v
+cells_behav.v
+sky130_hd_measured.lib
