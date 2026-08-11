@@ -1,0 +1,517 @@
+<title>Inside the ASIC puzzle</title>
+<style>
+  :root {
+    color-scheme: light;
+    --ground: #e9ecf1;
+    --surface: #fbfcfd;
+    --surface-2: #f1f3f7;
+    --line: #ccd2dd;
+    --line-strong: #333a47;
+    --ink: #12151a;
+    --ink-2: #4a5261;
+    --ink-3: #767f90;
+    --accent: #2a78d6;
+    --accent-soft: #dbe8f9;
+    --star: #eb6834;
+    --alert: #c62f2e;
+    --lamp-off: #c3cad6;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --ground: #0d1016;
+      --surface: #161a22;
+      --surface-2: #1d222c;
+      --line: #2b323f;
+      --line-strong: #8e98a9;
+      --ink: #eef1f6;
+      --ink-2: #a8b1c1;
+      --ink-3: #78818f;
+      --accent: #3987e5;
+      --accent-soft: #1b2c44;
+      --star: #d95926;
+      --alert: #e66767;
+      --lamp-off: #333b49;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #0d1016;
+    --surface: #161a22;
+    --surface-2: #1d222c;
+    --line: #2b323f;
+    --line-strong: #8e98a9;
+    --ink: #eef1f6;
+    --ink-2: #a8b1c1;
+    --ink-3: #78818f;
+    --accent: #3987e5;
+    --accent-soft: #1b2c44;
+    --star: #d95926;
+    --alert: #e66767;
+    --lamp-off: #333b49;
+  }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 40px 24px 72px; display: flex; flex-direction: column; gap: 44px; }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--ink-3); margin: 0 0 10px;
+  }
+  h1 { font-family: var(--mono); font-size: clamp(26px, 4.4vw, 40px); font-weight: 600;
+       letter-spacing: -.02em; margin: 0 0 12px; text-wrap: balance; }
+  .lede { margin: 0; color: var(--ink-2); max-width: 62ch; }
+  .embargo {
+    margin-top: 18px; padding: 10px 14px; border-left: 3px solid var(--star);
+    background: var(--surface); font-size: 13px; color: var(--ink-2);
+  }
+  h2 { font-family: var(--mono); font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
+       color: var(--ink-3); font-weight: 600; margin: 0 0 16px; }
+  .cap { font-size: 13px; color: var(--ink-3); margin: 12px 0 0; max-width: 70ch; }
+
+  .readout {
+    background: var(--surface); border: 1px solid var(--line);
+    display: grid; grid-template-columns: 1fr; gap: 0;
+  }
+  .string {
+    font-family: var(--mono); font-size: clamp(22px, 5vw, 44px); font-weight: 600;
+    letter-spacing: .04em; padding: 26px 24px; color: var(--star);
+    border-bottom: 1px solid var(--line); overflow-x: auto; white-space: nowrap;
+  }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .fact { padding: 16px 24px; border-right: 1px solid var(--line); }
+  .fact:last-child { border-right: 0; }
+  .fact b { display: block; font-family: var(--mono); font-size: 24px; font-weight: 600;
+            font-variant-numeric: tabular-nums; }
+  .fact span { font-size: 12px; color: var(--ink-3); font-family: var(--mono);
+               letter-spacing: .06em; text-transform: uppercase; }
+
+  .console { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 28px;
+             background: var(--surface); border: 1px solid var(--line); padding: 24px; }
+  @media (max-width: 800px) { .console { grid-template-columns: 1fr; } }
+  .gridwrap { display: flex; flex-direction: column; gap: 14px; }
+  svg.grid { width: 100%; height: auto; display: block; }
+
+  .controls { display: flex; align-items: center; gap: 12px; }
+  button {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+    background: var(--surface-2); color: var(--ink); border: 1px solid var(--line);
+    padding: 7px 14px; cursor: pointer;
+  }
+  button:hover { border-color: var(--line-strong); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  input[type=range] { flex: 1; accent-color: var(--accent); min-width: 80px; }
+  .cyc { font-family: var(--mono); font-size: 12px; color: var(--ink-2);
+         font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .panelgrid { display: flex; flex-direction: column; gap: 18px; }
+  .metarow { display: flex; gap: 22px; flex-wrap: wrap; }
+  .meta { font-family: var(--mono); font-size: 12px; color: var(--ink-3);
+          letter-spacing: .06em; text-transform: uppercase; }
+  .meta b { display: block; font-size: 20px; color: var(--ink); letter-spacing: 0;
+            font-variant-numeric: tabular-nums; }
+  .tallylabel { font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
+                text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px; }
+  .tallies { display: flex; flex-wrap: wrap; gap: 4px; }
+  .t {
+    font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums;
+    background: var(--surface-2); border: 1px solid var(--line); color: var(--ink-2);
+    padding: 4px 0; width: 34px; text-align: center;
+  }
+  .t i { display: block; font-style: normal; font-size: 9px; color: var(--ink-3); letter-spacing: .06em; }
+  .t.hit { border-color: var(--accent); color: var(--accent); }
+  .t.over { border-color: var(--alert); color: var(--alert); }
+  .lamp { display: flex; align-items: center; gap: 10px; font-family: var(--mono);
+          font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+  .bulb { width: 13px; height: 13px; border-radius: 50%; background: var(--lamp-off);
+          border: 1px solid var(--line); }
+  .lamp.on { color: var(--star); }
+  .lamp.on .bulb { background: var(--star); border-color: var(--star); }
+  .oline { font-family: var(--mono); font-size: 15px; color: var(--star); min-height: 1.5em;
+           letter-spacing: .05em; word-break: break-all; }
+
+  .floor { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+  .fp { background: var(--surface); border: 1px solid var(--line); padding: 12px; }
+  .fp canvas { width: 100%; height: auto; display: block; }
+  .fp h3 { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .04em;
+           margin: 10px 0 2px; color: var(--ink); }
+  .fp p { margin: 0; font-family: var(--mono); font-size: 11px; color: var(--ink-3);
+          font-variant-numeric: tabular-nums; }
+
+  table { border-collapse: collapse; width: 100%; background: var(--surface); font-size: 14px; }
+  caption { text-align: left; font-size: 13px; color: var(--ink-3); padding-bottom: 8px; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+       color: var(--ink-3); font-weight: 600; }
+  td.res { font-family: var(--mono); color: var(--accent); white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  code { font-family: var(--mono); font-size: 13px; background: var(--surface-2); padding: 1px 5px; }
+  ul.files { list-style: none; padding: 0; margin: 0; display: grid;
+             grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 6px; }
+  ul.files li { font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
+  ul.files b { color: var(--ink); font-weight: 600; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Jane Street ASIC puzzle &middot; 2026</p>
+    <h1>Inside the chip</h1>
+    <p class="lede">Recovered from <code>puzzle.gds</code> alone: the design is an 11&times;11
+      two-star Star Battle checker. It reads the grid as 121 serial bits and raises
+      <code>success</code> one cycle after the last one.</p>
+    <p class="embargo">Contains the solution. Submissions close 4 September 2026 &mdash; keep this private until then.</p>
+  </header>
+
+  <section>
+    <h2>The hidden string</h2>
+    <div class="readout">
+      <div class="string" id="hero-string">(* TWO STARS *)</div>
+      <div class="facts">
+        <div class="fact"><b>121</b><span>input bits</span></div>
+        <div class="fact"><b>92</b><span>flip-flops</span></div>
+        <div class="fact"><b>728</b><span>logic cells</span></div>
+        <div class="fact"><b>1</b><span>accepted grid</span></div>
+      </div>
+    </div>
+    <p class="cap">Emitted one ASCII byte per cycle on <code>O[7:0]</code> once <code>success</code> is high.
+      It is an OCaml comment.</p>
+  </section>
+
+  <section>
+    <h2>Watch the chip check the grid</h2>
+    <div class="console">
+      <div class="gridwrap">
+        <svg class="grid" id="grid" viewBox="0 0 384 384" role="img"
+             aria-label="11 by 11 Star Battle grid with region borders and stars"></svg>
+        <div class="controls">
+          <button id="play" aria-label="Play or pause the stream">Play</button>
+          <input type="range" id="scrub" min="0" max="141" value="0" aria-label="Cycle">
+          <span class="cyc" id="cyc">cycle 0</span>
+        </div>
+      </div>
+
+      <div class="panelgrid">
+        <div class="metarow">
+          <div class="meta">cell in row<b id="m-cell">0</b></div>
+          <div class="meta">row<b id="m-row">0</b></div>
+          <div class="meta">stars this row<b id="m-rowacc">0</b></div>
+        </div>
+        <div>
+          <div class="tallylabel">column accumulators (from the chip)</div>
+          <div class="tallies" id="cols"></div>
+        </div>
+        <div>
+          <div class="tallylabel">region accumulators (from the chip)</div>
+          <div class="tallies" id="regs"></div>
+        </div>
+        <div class="lamp" id="lamp"><span class="bulb"></span><span>success</span></div>
+        <div class="oline" id="ostr">&nbsp;</div>
+      </div>
+    </div>
+    <p class="cap">Tallies are decoded from the chip&rsquo;s own accumulator flip-flops, not recomputed.
+      The row counter is one-hot and resets every 11 cycles; the 11 column and 11 region counters
+      are two-bit and saturate at 3.</p>
+  </section>
+
+  <section>
+    <h2>Where each block sits on the die</h2>
+    <div class="floor" id="floor"></div>
+    <p class="cap">Every gate assigned to a recovered block by cone membership, then placed by probing
+      the net at its output pin. The cell counter is the mod-11 one. Die is 200 &times; 353 &micro;m;
+      grey marks all other logic. The puzzle&rsquo;s own hint image boxes off one region as the
+      &ldquo;output generator&rdquo;: 203 of the 208 cells recovered under that name fall inside that box,
+      as do all 12 of its flip-flops, and no flip-flop from any other block does.</p>
+  </section>
+
+  <section>
+    <h2>Confirmation</h2>
+    <div class="scroll">
+      <table>
+        <caption>Four independent checks, plus the warm-up as a control.</caption>
+        <thead><tr><th>Check</th><th>Method</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td>Extractor correctness</td><td>Same flow on the warm-up, which ships its ground-truth netlist</td><td class="res">cell histogram identical; A+B=496 over all 65,536 pairs</td></tr>
+          <tr><td>What the chip computes</td><td>Unroll 122 cycles to CNF, miter against the Star Battle predicate, both directions</td><td class="res">UNSAT &mdash; equivalent over all 2<sup>121</sup> inputs</td></tr>
+          <tr><td>Independent simulation</td><td>Icarus Verilog with the official SkyWater cell models</td><td class="res">success high; string reproduced</td></tr>
+          <tr><td>Differential test</td><td>Gate netlist vs spec on flips, near-misses and random grids</td><td class="res">37,382 grids, 0 disagreements</td></tr>
+          <tr><td>Un-reset flops</td><td>All 16 power-up states of the output block, and the one floating net forced both ways</td><td class="res">same string in every case</td></tr>
+          <tr><td>The extraction itself</td><td>Second extractor sharing no code: gdstk, exact polygon booleans, own union-find</td><td class="res">identical net partition on all 5,094 pin sites</td></tr>
+          <tr><td>Reconstructed RTL</td><td>Bounded sequential miter in yosys, RTL vs the extracted netlist</td><td class="res">145 cycles under the operating protocol; 122 with every input free</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Easter eggs</h2>
+    <div class="readout">
+      <div class="string" style="font-size:clamp(15px,2.6vw,22px)">PER ARENAM AD ASTRA</div>
+      <div class="facts" style="grid-template-columns:1fr">
+        <div class="fact" style="border-right:0">
+          <span>36 cells in a row beneath the die, in two widths</span>
+          <b style="font-size:13px;letter-spacing:.22em;overflow-x:auto;display:block">&middot;&mdash;&mdash;&middot; &middot; &middot;&mdash;&middot; &nbsp; &middot;&mdash; &middot;&mdash;&middot; &middot; &mdash;&middot; &middot;&mdash; &mdash;&mdash; &nbsp; &middot;&mdash; &mdash;&middot;&middot; &nbsp; &middot;&mdash; &middot;&middot;&middot; &mdash; &middot;&mdash;&middot; &middot;&mdash;</b>
+        </div>
+      </div>
+    </div>
+    <p class="cap">The two anonymized cell types, <code>INTERNAL_3</code> and <code>INTERNAL_7</code>,
+      are empty boxes 3 and 9 sites wide. All 36 of their instances sit in a single row below the cell
+      array, and the widths and gaps quantize exactly: dot, dash, element gap, letter gap, word gap.
+      Latin for &ldquo;through the sand to the stars&rdquo;, on <em>per aspera ad astra</em>.
+      Sand as in silicon.</p>
+    <div class="scroll">
+      <table>
+        <caption>Everything else hidden in the puzzle files.</caption>
+        <thead><tr><th>Where</th><th>What</th></tr></thead>
+        <tbody>
+          <tr><td><code>example_inputs.vcd</code> stimulus</td><td class="res">"The night sky awaits" &mdash; two 121-bit grids, 7-bit ASCII, one character per grid row, LSB in column 0</td></tr>
+          <tr><td><code>example_inputs.vcd</code> <code>$version</code></td><td class="res">"Leave no stone unturned!"</td></tr>
+          <tr><td><code>example_inputs.vcd</code> <code>$date</code></td><td class="res">Sat Dec 31 23:59:60 2016 &mdash; a real leap second</td></tr>
+          <tr><td>the payload itself</td><td class="res">formatted as an OCaml comment</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Back to hardware</h2>
+    <div class="scroll">
+      <table>
+        <caption>The recovered function, written as RTL and pushed back down the flow.</caption>
+        <thead><tr><th></th><th>On the die</th><th>Verilog</th><th>Hardcaml</th></tr></thead>
+        <tbody>
+          <tr><td>logic cells</td><td class="res">728</td><td class="res">451</td><td class="res">450</td></tr>
+          <tr><td>flip-flops</td><td class="res">92</td><td class="res">75</td><td class="res">75</td></tr>
+          <tr><td>cell area</td><td class="res">10,758 &micro;m&sup2;</td><td class="res">6,816 &micro;m&sup2;</td><td class="res">6,379 &micro;m&sup2;</td></tr>
+          <tr><td>proved vs the die</td><td class="res">&mdash;</td><td class="res">145 cycles</td><td class="res">145 cycles</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="cap">Synthesized with yosys onto a Liberty built from this die: cell functions from the
+      SkyWater models, cell areas measured off <code>puzzle.gds</code>. The reconstruction is smaller
+      because it carries no clock tree (the die has 31 clock buffers plus 15 balancing loads) and
+      because the silicon spends flops on a one-hot row tally where the RTL uses two bits.
+      It is packaged for Tiny Tapeout in <code>tinytapeout/</code>, verified through that pinout.
+      The design was written twice, independently, in Verilog and in Hardcaml &mdash; Jane Street&rsquo;s
+      own OCaml hardware language, which is what the payload&rsquo;s <code>(* &hellip; *)</code> is
+      winking at. Both are proved equivalent to the silicon by the same miter, and they converge
+      to within one cell of each other.</p>
+  </section>
+
+  <section>
+    <h2>Toolchain</h2>
+    <ul class="files">
+      <li><b>extract.py</b> GDS &rarr; netlist</li>
+      <li><b>extract2.py</b> independent second extraction</li>
+      <li><b>cells.py</b> sky130 cell semantics</li>
+      <li><b>sim.py</b> bit-parallel gate simulator</li>
+      <li><b>solve.py</b> SAT unroll</li>
+      <li><b>proof.py</b> equivalence miter</li>
+      <li><b>regions.py</b> region-map probe</li>
+      <li><b>place.py</b> netlist &rarr; placement</li>
+      <li><b>diff_test.py</b> differential test</li>
+      <li><b>gen_rtl.py</b> RTL reconstruction</li>
+      <li><b>gen_liberty.py</b> Liberty from the die</li>
+      <li><b>equiv.ys / synth.ys</b> miter and round trip</li>
+    </ul>
+  </section>
+</div>
+
+<script type="application/json" id="chipdata">{"bits": [0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0], "regions": ["AAAAACCGJJI", "AADAACGGJJI", "AADCCCCGGJI", "AADCBBBIGGI", "DADCBIIIIII", "DDDCBBBIKKK", "CCCCCCBIKHH", "CFFFBBBIKHH", "CFFEIIIIKHH", "CCFEEIIIKKK", "CFFEIIIIIII"], "letters": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"], "frames": [{"cell": 0, "row": 0, "regions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "columns": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 1, "row": 0, "regions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "columns": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 2, "row": 0, "regions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "columns": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 3, "row": 0, "regions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "columns": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 4, "row": 0, "regions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "columns": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 5, "row": 0, "regions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "columns": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 6, "row": 0, "regions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "columns": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 7, "row": 0, "regions": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "columns": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 8, "row": 0, "regions": [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], "columns": [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 9, "row": 0, "regions": [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], "columns": [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 10, "row": 0, "regions": [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0], "columns": [0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 0, "row": 1, "regions": [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0], "columns": [0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 1, "row": 1, "regions": [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0], "columns": [1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 2, "row": 1, "regions": [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0], "columns": [1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 3, "row": 1, "regions": [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0], "columns": [1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 4, "row": 1, "regions": [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0], "columns": [1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 5, "row": 1, "regions": [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0], "columns": [1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 6, "row": 1, "regions": [1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0], "columns": [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 7, "row": 1, "regions": [1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0], "columns": [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 8, "row": 1, "regions": [1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0], "columns": [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 9, "row": 1, "regions": [1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0], "columns": [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 10, "row": 1, "regions": [1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0], "columns": [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 0, "row": 2, "regions": [1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0], "columns": [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 1, "row": 2, "regions": [1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0], "columns": [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 2, "row": 2, "regions": [1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0], "columns": [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 3, "row": 2, "regions": [1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0], "columns": [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 4, "row": 2, "regions": [1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0], "columns": [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 5, "row": 2, "regions": [1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0], "columns": [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 6, "row": 2, "regions": [1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0], "columns": [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 7, "row": 2, "regions": [1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0], "columns": [1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 8, "row": 2, "regions": [1, 0, 1, 0, 0, 0, 2, 0, 0, 1, 0], "columns": [1, 0, 0, 0, 0, 1, 0, 2, 0, 1, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 9, "row": 2, "regions": [1, 0, 1, 0, 0, 0, 2, 0, 0, 1, 0], "columns": [1, 0, 0, 0, 0, 1, 0, 2, 0, 1, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 10, "row": 2, "regions": [1, 0, 1, 0, 0, 0, 2, 0, 0, 2, 0], "columns": [1, 0, 0, 0, 0, 1, 0, 2, 0, 2, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 0, "row": 3, "regions": [1, 0, 1, 0, 0, 0, 2, 0, 0, 2, 0], "columns": [1, 0, 0, 0, 0, 1, 0, 2, 0, 2, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 1, "row": 3, "regions": [2, 0, 1, 0, 0, 0, 2, 0, 0, 2, 0], "columns": [2, 0, 0, 0, 0, 1, 0, 2, 0, 2, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 2, "row": 3, "regions": [2, 0, 1, 0, 0, 0, 2, 0, 0, 2, 0], "columns": [2, 0, 0, 0, 0, 1, 0, 2, 0, 2, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 3, "row": 3, "regions": [2, 0, 1, 1, 0, 0, 2, 0, 0, 2, 0], "columns": [2, 0, 1, 0, 0, 1, 0, 2, 0, 2, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 4, "row": 3, "regions": [2, 0, 1, 1, 0, 0, 2, 0, 0, 2, 0], "columns": [2, 0, 1, 0, 0, 1, 0, 2, 0, 2, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 5, "row": 3, "regions": [2, 0, 1, 1, 0, 0, 2, 0, 0, 2, 0], "columns": [2, 0, 1, 0, 0, 1, 0, 2, 0, 2, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 6, "row": 3, "regions": [2, 0, 1, 1, 0, 0, 2, 0, 0, 2, 0], "columns": [2, 0, 1, 0, 0, 1, 0, 2, 0, 2, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 7, "row": 3, "regions": [2, 0, 1, 1, 0, 0, 2, 0, 0, 2, 0], "columns": [2, 0, 1, 0, 0, 1, 0, 2, 0, 2, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 8, "row": 3, "regions": [2, 0, 1, 1, 0, 0, 2, 0, 0, 2, 0], "columns": [2, 0, 1, 0, 0, 1, 0, 2, 0, 2, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 9, "row": 3, "regions": [2, 0, 1, 1, 0, 0, 2, 0, 0, 2, 0], "columns": [2, 0, 1, 0, 0, 1, 0, 2, 0, 2, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 10, "row": 3, "regions": [2, 0, 1, 1, 0, 0, 2, 0, 0, 2, 0], "columns": [2, 0, 1, 0, 0, 1, 0, 2, 0, 2, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 0, "row": 4, "regions": [2, 0, 1, 1, 0, 0, 2, 0, 0, 2, 0], "columns": [2, 0, 1, 0, 0, 1, 0, 2, 0, 2, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 1, "row": 4, "regions": [2, 0, 1, 1, 0, 0, 2, 0, 0, 2, 0], "columns": [2, 0, 1, 0, 0, 1, 0, 2, 0, 2, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 2, "row": 4, "regions": [2, 0, 1, 1, 0, 0, 2, 0, 0, 2, 0], "columns": [2, 0, 1, 0, 0, 1, 0, 2, 0, 2, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 3, "row": 4, "regions": [2, 0, 1, 1, 0, 0, 2, 0, 0, 2, 0], "columns": [2, 0, 1, 0, 0, 1, 0, 2, 0, 2, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 4, "row": 4, "regions": [2, 0, 1, 1, 0, 0, 2, 0, 0, 2, 0], "columns": [2, 0, 1, 0, 0, 1, 0, 2, 0, 2, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 5, "row": 4, "regions": [2, 1, 1, 1, 0, 0, 2, 0, 0, 2, 0], "columns": [2, 0, 1, 0, 1, 1, 0, 2, 0, 2, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 6, "row": 4, "regions": [2, 1, 1, 1, 0, 0, 2, 0, 0, 2, 0], "columns": [2, 0, 1, 0, 1, 1, 0, 2, 0, 2, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 7, "row": 4, "regions": [2, 1, 1, 1, 0, 0, 2, 0, 1, 2, 0], "columns": [2, 0, 1, 0, 1, 1, 1, 2, 0, 2, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 8, "row": 4, "regions": [2, 1, 1, 1, 0, 0, 2, 0, 1, 2, 0], "columns": [2, 0, 1, 0, 1, 1, 1, 2, 0, 2, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 9, "row": 4, "regions": [2, 1, 1, 1, 0, 0, 2, 0, 1, 2, 0], "columns": [2, 0, 1, 0, 1, 1, 1, 2, 0, 2, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 10, "row": 4, "regions": [2, 1, 1, 1, 0, 0, 2, 0, 1, 2, 0], "columns": [2, 0, 1, 0, 1, 1, 1, 2, 0, 2, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 0, "row": 5, "regions": [2, 1, 1, 1, 0, 0, 2, 0, 1, 2, 0], "columns": [2, 0, 1, 0, 1, 1, 1, 2, 0, 2, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 1, "row": 5, "regions": [2, 1, 1, 1, 0, 0, 2, 0, 1, 2, 0], "columns": [2, 0, 1, 0, 1, 1, 1, 2, 0, 2, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 2, "row": 5, "regions": [2, 1, 1, 1, 0, 0, 2, 0, 1, 2, 0], "columns": [2, 0, 1, 0, 1, 1, 1, 2, 0, 2, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 3, "row": 5, "regions": [2, 1, 1, 2, 0, 0, 2, 0, 1, 2, 0], "columns": [2, 0, 2, 0, 1, 1, 1, 2, 0, 2, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 4, "row": 5, "regions": [2, 1, 1, 2, 0, 0, 2, 0, 1, 2, 0], "columns": [2, 0, 2, 0, 1, 1, 1, 2, 0, 2, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 5, "row": 5, "regions": [2, 1, 1, 2, 0, 0, 2, 0, 1, 2, 0], "columns": [2, 0, 2, 0, 1, 1, 1, 2, 0, 2, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 6, "row": 5, "regions": [2, 1, 1, 2, 0, 0, 2, 0, 1, 2, 0], "columns": [2, 0, 2, 0, 1, 1, 1, 2, 0, 2, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 7, "row": 5, "regions": [2, 1, 1, 2, 0, 0, 2, 0, 1, 2, 0], "columns": [2, 0, 2, 0, 1, 1, 1, 2, 0, 2, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 8, "row": 5, "regions": [2, 1, 1, 2, 0, 0, 2, 0, 1, 2, 0], "columns": [2, 0, 2, 0, 1, 1, 1, 2, 0, 2, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 9, "row": 5, "regions": [2, 1, 1, 2, 0, 0, 2, 0, 1, 2, 1], "columns": [2, 0, 2, 0, 1, 1, 1, 2, 1, 2, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 10, "row": 5, "regions": [2, 1, 1, 2, 0, 0, 2, 0, 1, 2, 1], "columns": [2, 0, 2, 0, 1, 1, 1, 2, 1, 2, 0], "rowacc": 2, "success": 0, "O": 0}, {"cell": 0, "row": 6, "regions": [2, 1, 1, 2, 0, 0, 2, 0, 1, 2, 1], "columns": [2, 0, 2, 0, 1, 1, 1, 2, 1, 2, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 1, "row": 6, "regions": [2, 1, 1, 2, 0, 0, 2, 0, 1, 2, 1], "columns": [2, 0, 2, 0, 1, 1, 1, 2, 1, 2, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 2, "row": 6, "regions": [2, 1, 1, 2, 0, 0, 2, 0, 1, 2, 1], "columns": [2, 0, 2, 0, 1, 1, 1, 2, 1, 2, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 3, "row": 6, "regions": [2, 1, 1, 2, 0, 0, 2, 0, 1, 2, 1], "columns": [2, 0, 2, 0, 1, 1, 1, 2, 1, 2, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 4, "row": 6, "regions": [2, 1, 1, 2, 0, 0, 2, 0, 1, 2, 1], "columns": [2, 0, 2, 0, 1, 1, 1, 2, 1, 2, 0], "rowacc": 0, "success": 0, "O": 0}, {"cell": 5, "row": 6, "regions": [2, 1, 2, 2, 0, 0, 2, 0, 1, 2, 1], "columns": [2, 0, 2, 0, 2, 1, 1, 2, 1, 2, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 6, "row": 6, "regions": [2, 1, 2, 2, 0, 0, 2, 0, 1, 2, 1], "columns": [2, 0, 2, 0, 2, 1, 1, 2, 1, 2, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 7, "row": 6, "regions": [2, 1, 2, 2, 0, 0, 2, 0, 1, 2, 1], "columns": [2, 0, 2, 0, 2, 1, 1, 2, 1, 2, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 8, "row": 6, "regions": [2, 1, 2, 2, 0, 0, 2, 0, 1, 2, 1], "columns": [2, 0, 2, 0, 2, 1, 1, 2, 1, 2, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 9, "row": 6, "regions": [2, 1, 2, 2, 0, 0, 2, 0, 1, 2, 1], "columns": [2, 0, 2, 0, 2, 1, 1, 2, 1, 2, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 10, "row": 6, "regions": [2, 1, 2, 2, 0, 0, 2, 0, 1, 2, 1], "columns": [2, 0, 2, 0, 2, 1, 1, 2, 1, 2, 0], "rowacc": 1, "success": 0, "O": 0}, {"cell": 0, "row": 7, "regions": [2, 1, 2, 2, 0, 0, 2, 1, 1, 2, 1], "columns": [2, 0, 2, 0, 2, 1, 1, 2, 1, 2, 1], "rowacc": 0, "success": 0, "O": 0}, {"cell": 1, "row": 7, "regions": [2, 1, 2, 2, 0, 0, 2, 1, 1, 2, 1], "columns": [2, 0, 2, 0, 2, 1, 1, 2, 1, 2, 1], "rowacc": 0, "success": 0, "O": 0}, {"cell": 2, "row": 7, "regions": [2, 1, 2, 2, 0, 1, 2, 1, 1, 2, 1], "columns": [2, 1, 2, 0, 2, 1, 1, 2, 1, 2, 1], "rowacc": 1, "success": 0, "O": 0}, {"cell": 3, "row": 7, "regions": [2, 1, 2, 2, 0, 1, 2, 1, 1, 2, 1], "columns": [2, 1, 2, 0, 2, 1, 1, 2, 1, 2, 1], "rowacc": 1, "success": 0, "O": 0}, {"cell": 4, "row": 7, "regions": [2, 1, 2, 2, 0, 1, 2, 1, 1, 2, 1], "columns": [2, 1, 2, 0, 2, 1, 1, 2, 1, 2, 1], "rowacc": 1, "success": 0, "O": 0}, {"cell": 5, "row": 7, "regions": [2, 1, 2, 2, 0, 1, 2, 1, 1, 2, 1], "columns": [2, 1, 2, 0, 2, 1, 1, 2, 1, 2, 1], "rowacc": 1, "success": 0, "O": 0}, {"cell": 6, "row": 7, "regions": [2, 1, 2, 2, 0, 1, 2, 1, 1, 2, 1], "columns": [2, 1, 2, 0, 2, 1, 1, 2, 1, 2, 1], "rowacc": 1, "success": 0, "O": 0}, {"cell": 7, "row": 7, "regions": [2, 2, 2, 2, 0, 1, 2, 1, 1, 2, 1], "columns": [2, 1, 2, 0, 2, 1, 2, 2, 1, 2, 1], "rowacc": 2, "success": 0, "O": 0}, {"cell": 8, "row": 7, "regions": [2, 2, 2, 2, 0, 1, 2, 1, 1, 2, 1], "columns": [2, 1, 2, 0, 2, 1, 2, 2, 1, 2, 1], "rowacc": 2, "success": 0, "O": 0}, {"cell": 9, "row": 7, "regions": [2, 2, 2, 2, 0, 1, 2, 1, 1, 2, 1], "columns": [2, 1, 2, 0, 2, 1, 2, 2, 1, 2, 1], "rowacc": 2, "success": 0, "O": 0}, {"cell": 10, "row": 7, "regions": [2, 2, 2, 2, 0, 1, 2, 1, 1, 2, 1], "columns": [2, 1, 2, 0, 2, 1, 2, 2, 1, 2, 1], "rowacc": 2, "success": 0, "O": 0}, {"cell": 0, "row": 8, "regions": [2, 2, 2, 2, 0, 1, 2, 1, 1, 2, 1], "columns": [2, 1, 2, 0, 2, 1, 2, 2, 1, 2, 1], "rowacc": 0, "success": 0, "O": 0}, {"cell": 1, "row": 8, "regions": [2, 2, 2, 2, 0, 1, 2, 1, 1, 2, 1], "columns": [2, 1, 2, 0, 2, 1, 2, 2, 1, 2, 1], "rowacc": 0, "success": 0, "O": 0}, {"cell": 2, "row": 8, "regions": [2, 2, 2, 2, 0, 1, 2, 1, 1, 2, 1], "columns": [2, 1, 2, 0, 2, 1, 2, 2, 1, 2, 1], "rowacc": 0, "success": 0, "O": 0}, {"cell": 3, "row": 8, "regions": [2, 2, 2, 2, 0, 1, 2, 1, 1, 2, 1], "columns": [2, 1, 2, 0, 2, 1, 2, 2, 1, 2, 1], "rowacc": 0, "success": 0, "O": 0}, {"cell": 4, "row": 8, "regions": [2, 2, 2, 2, 1, 1, 2, 1, 1, 2, 1], "columns": [2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1], "rowacc": 1, "success": 0, "O": 0}, {"cell": 5, "row": 8, "regions": [2, 2, 2, 2, 1, 1, 2, 1, 1, 2, 1], "columns": [2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1], "rowacc": 1, "success": 0, "O": 0}, {"cell": 6, "row": 8, "regions": [2, 2, 2, 2, 1, 1, 2, 1, 1, 2, 1], "columns": [2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1], "rowacc": 1, "success": 0, "O": 0}, {"cell": 7, "row": 8, "regions": [2, 2, 2, 2, 1, 1, 2, 1, 1, 2, 1], "columns": [2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1], "rowacc": 1, "success": 0, "O": 0}, {"cell": 8, "row": 8, "regions": [2, 2, 2, 2, 1, 1, 2, 1, 1, 2, 1], "columns": [2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1], "rowacc": 1, "success": 0, "O": 0}, {"cell": 9, "row": 8, "regions": [2, 2, 2, 2, 1, 1, 2, 1, 1, 2, 1], "columns": [2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1], "rowacc": 1, "success": 0, "O": 0}, {"cell": 10, "row": 8, "regions": [2, 2, 2, 2, 1, 1, 2, 1, 1, 2, 1], "columns": [2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1], "rowacc": 1, "success": 0, "O": 0}, {"cell": 0, "row": 9, "regions": [2, 2, 2, 2, 1, 1, 2, 2, 1, 2, 1], "columns": [2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 2], "rowacc": 0, "success": 0, "O": 0}, {"cell": 1, "row": 9, "regions": [2, 2, 2, 2, 1, 1, 2, 2, 1, 2, 1], "columns": [2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 2], "rowacc": 0, "success": 0, "O": 0}, {"cell": 2, "row": 9, "regions": [2, 2, 2, 2, 1, 1, 2, 2, 1, 2, 1], "columns": [2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 2], "rowacc": 0, "success": 0, "O": 0}, {"cell": 3, "row": 9, "regions": [2, 2, 2, 2, 1, 1, 2, 2, 1, 2, 1], "columns": [2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 2], "rowacc": 0, "success": 0, "O": 0}, {"cell": 4, "row": 9, "regions": [2, 2, 2, 2, 1, 1, 2, 2, 1, 2, 1], "columns": [2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 2], "rowacc": 0, "success": 0, "O": 0}, {"cell": 5, "row": 9, "regions": [2, 2, 2, 2, 1, 1, 2, 2, 1, 2, 1], "columns": [2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 2], "rowacc": 0, "success": 0, "O": 0}, {"cell": 6, "row": 9, "regions": [2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 1], "columns": [2, 1, 2, 1, 2, 2, 2, 2, 1, 2, 2], "rowacc": 1, "success": 0, "O": 0}, {"cell": 7, "row": 9, "regions": [2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 1], "columns": [2, 1, 2, 1, 2, 2, 2, 2, 1, 2, 2], "rowacc": 1, "success": 0, "O": 0}, {"cell": 8, "row": 9, "regions": [2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 1], "columns": [2, 1, 2, 1, 2, 2, 2, 2, 1, 2, 2], "rowacc": 1, "success": 0, "O": 0}, {"cell": 9, "row": 9, "regions": [2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2], "columns": [2, 1, 2, 1, 2, 2, 2, 2, 2, 2, 2], "rowacc": 2, "success": 0, "O": 0}, {"cell": 10, "row": 9, "regions": [2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2], "columns": [2, 1, 2, 1, 2, 2, 2, 2, 2, 2, 2], "rowacc": 2, "success": 0, "O": 0}, {"cell": 0, "row": 10, "regions": [2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2], "columns": [2, 1, 2, 1, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 0, "O": 0}, {"cell": 1, "row": 10, "regions": [2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2], "columns": [2, 1, 2, 1, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 0, "O": 0}, {"cell": 2, "row": 10, "regions": [2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2], "rowacc": 1, "success": 0, "O": 0}, {"cell": 3, "row": 10, "regions": [2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2], "rowacc": 1, "success": 0, "O": 0}, {"cell": 4, "row": 10, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 2, "success": 0, "O": 0}, {"cell": 5, "row": 10, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 2, "success": 0, "O": 0}, {"cell": 6, "row": 10, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 2, "success": 0, "O": 0}, {"cell": 7, "row": 10, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 2, "success": 0, "O": 0}, {"cell": 8, "row": 10, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 2, "success": 0, "O": 0}, {"cell": 9, "row": 10, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 2, "success": 0, "O": 0}, {"cell": 10, "row": 10, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 2, "success": 0, "O": 0}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 0, "O": 0}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 1, "O": 40}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 1, "O": 42}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 1, "O": 32}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 1, "O": 84}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 1, "O": 87}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 1, "O": 79}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 1, "O": 32}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 1, "O": 83}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 1, "O": 84}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 1, "O": 65}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 1, "O": 82}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 1, "O": 83}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 1, "O": 32}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 1, "O": 42}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 1, "O": 41}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 1, "O": 0}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 1, "O": 0}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 1, "O": 0}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 1, "O": 0}, {"cell": 0, "row": 0, "regions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "columns": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "rowacc": 0, "success": 1, "O": 0}], "die": {"x": 0.0, "y": -52.72, "w": 200.0, "h": 352.72}, "panels": {"unassigned": [[97.33, 73.2, 5.44, 3.2], [146.09, 222.8, 5.44, 3.2], [146.09, 176.56, 5.44, 3.2], [156.67, 225.52, 5.44, 3.2], [117.11, 250.0, 5.44, 3.2], [119.41, 247.28, 5.44, 3.2], [107.91, 203.76, 5.44, 3.2], [104.69, 162.96, 9.58, 3.2], [100.55, 198.32, 5.44, 3.2], [156.67, 179.28, 5.44, 3.2], [72.49, 149.36, 5.44, 3.2], [60.07, 146.64, 5.44, 3.2], [72.95, 105.84, 5.44, 3.2], [85.83, 75.92, 5.44, 3.2], [88.59, 108.56, 5.44, 3.2], [120.79, 89.52, 5.44, 3.2], [118.49, 84.08, 5.44, 3.2]], "output generator": [[174.61, 116.72, 4.06, 3.2], [170.01, 116.72, 4.98, 3.2], [149.31, 184.72, 2.68, 3.2], [170.01, 201.04, 6.36, 3.2], [177.83, 201.04, 3.6, 3.2], [164.03, 201.04, 2.68, 3.2], [166.33, 201.04, 4.06, 3.2], [171.85, 258.16, 3.14, 3.2], [170.93, 255.44, 4.52, 3.2], [162.65, 244.56, 1.76, 3.2], [168.63, 244.56, 6.36, 3.2], [164.03, 244.56, 4.98, 3.2], [170.93, 239.12, 4.52, 3.2], [171.39, 222.8, 4.06, 3.2], [177.83, 244.56, 3.14, 3.2], [180.59, 244.56, 3.14, 3.2], [173.69, 228.24, 4.06, 3.2], [174.61, 244.56, 3.14, 3.2], [173.69, 236.4, 3.14, 3.2], [173.69, 225.52, 4.06, 3.2], [172.31, 220.08, 4.06, 3.2], [169.55, 250.0, 8.2, 3.2], [167.71, 247.28, 8.2, 3.2], [168.63, 252.72, 8.2, 3.2], [168.63, 241.84, 8.2, 3.2], [172.31, 206.48, 4.06, 3.2], [173.23, 211.92, 4.06, 3.2], [170.93, 203.76, 6.36, 3.2], [174.15, 209.2, 4.06, 3.2], [172.31, 214.64, 4.06, 3.2], [172.31, 217.36, 4.06, 3.2], [180.13, 247.28, 3.14, 3.2], [177.83, 250.0, 4.52, 3.2], [176.45, 252.72, 3.14, 3.2], [175.53, 247.28, 4.98, 3.2], [161.73, 247.28, 1.76, 3.2], [160.35, 250.0, 4.06, 3.2], [164.95, 252.72, 4.06, 3.2], [164.95, 255.44, 2.68, 3.2], [167.71, 255.44, 3.6, 3.2], [164.03, 250.0, 4.06, 3.2], [164.95, 247.28, 3.14, 3.2], [167.71, 222.8, 4.06, 3.2], [164.03, 222.8, 4.06, 3.2], [161.73, 209.2, 3.14, 3.2], [164.95, 241.84, 4.06, 3.2], [166.33, 225.52, 4.06, 3.2], [168.63, 239.12, 1.76, 3.2], [170.01, 228.24, 4.06, 3.2], [170.01, 230.96, 4.06, 3.2], [170.01, 225.52, 4.06, 3.2], [162.65, 211.92, 2.68, 3.2], [166.79, 209.2, 4.06, 3.2], [168.63, 211.92, 4.98, 3.2], [167.71, 214.64, 4.98, 3.2], [164.95, 211.92, 4.06, 3.2], [165.87, 206.48, 3.14, 3.2], [167.71, 217.36, 4.98, 3.2], [164.95, 220.08, 4.06, 3.2], [168.63, 220.08, 4.06, 3.2], [164.49, 217.36, 3.6, 3.2], [164.95, 214.64, 3.14, 3.2], [168.63, 206.48, 4.06, 3.2], [170.47, 209.2, 4.06, 3.2], [177.83, 222.8, 4.06, 3.2], [176.45, 241.84, 3.14, 3.2], [180.59, 211.92, 3.14, 3.2], [177.83, 211.92, 3.14, 3.2], [179.67, 214.64, 3.14, 3.2], [177.83, 217.36, 4.06, 3.2], [175.99, 214.64, 4.06, 3.2], [175.99, 220.08, 4.06, 3.2], [176.91, 203.76, 2.68, 3.2], [177.83, 209.2, 3.14, 3.2], [177.83, 206.48, 3.14, 3.2], [168.63, 184.72, 6.36, 3.2], [171.85, 154.8, 3.6, 3.2], [170.93, 157.52, 1.76, 3.2], [174.61, 146.64, 3.14, 3.2], [170.93, 146.64, 4.06, 3.2], [172.77, 135.76, 3.6, 3.2], [174.15, 127.6, 3.6, 3.2], [174.61, 143.92, 1.76, 3.2], [173.69, 133.04, 3.6, 3.2], [170.93, 130.32, 4.52, 3.2], [170.93, 138.48, 4.06, 3.2], [170.93, 143.92, 4.06, 3.2], [171.85, 141.2, 3.6, 3.2], [167.71, 195.6, 10.04, 3.2], [173.69, 192.88, 10.04, 3.2], [168.63, 176.56, 10.04, 3.2], [174.61, 182.0, 10.04, 3.2], [170.93, 173.84, 6.36, 3.2], [174.61, 184.72, 3.14, 3.2], [172.77, 171.12, 6.36, 3.2], [170.93, 149.36, 4.98, 3.2], [171.85, 152.08, 5.9, 3.2], [167.71, 190.16, 10.04, 3.2], [166.79, 187.44, 10.04, 3.2], [172.77, 198.32, 10.04, 3.2], [167.71, 179.28, 10.04, 3.2], [170.93, 182.0, 4.06, 3.2], [177.83, 179.28, 6.36, 3.2], [184.27, 176.56, 3.6, 3.2], [182.43, 187.44, 6.36, 3.2], [183.81, 184.72, 4.98, 3.2], [183.35, 192.88, 4.06, 3.2], [183.81, 195.6, 3.6, 3.2], [177.83, 195.6, 6.36, 3.2], [176.45, 187.44, 6.36, 3.2], [177.83, 190.16, 6.36, 3.2], [177.83, 184.72, 6.36, 3.2], [178.29, 176.56, 6.36, 3.2], [178.75, 171.12, 3.6, 3.2], [177.83, 168.4, 3.6, 3.2], [177.83, 173.84, 6.36, 3.2], [183.81, 173.84, 2.68, 3.2], [161.73, 168.4, 2.68, 3.2], [161.73, 179.28, 6.36, 3.2], [161.27, 171.12, 3.6, 3.2], [161.73, 190.16, 6.36, 3.2], [161.73, 195.6, 6.36, 3.2], [160.35, 187.44, 4.52, 3.2], [158.51, 182.0, 6.36, 3.2], [153.45, 179.28, 3.6, 3.2], [156.67, 184.72, 6.36, 3.2], [162.65, 184.72, 6.36, 3.2], [166.79, 198.32, 6.36, 3.2], [164.95, 192.88, 6.36, 3.2], [164.95, 182.0, 6.36, 3.2], [170.93, 192.88, 3.14, 3.2], [154.83, 190.16, 3.6, 3.2], [152.53, 190.16, 2.68, 3.2], [152.99, 187.44, 3.6, 3.2], [155.29, 182.0, 3.6, 3.2], [157.13, 192.88, 3.6, 3.2], [150.69, 187.44, 2.68, 3.2], [150.69, 182.0, 2.68, 3.2], [152.99, 182.0, 2.68, 3.2], [156.21, 187.44, 4.52, 3.2], [157.59, 173.84, 3.6, 3.2], [158.05, 176.56, 4.06, 3.2], [153.91, 176.56, 1.76, 3.2], [158.97, 171.12, 2.68, 3.2], [167.25, 165.68, 2.68, 3.2], [164.95, 176.56, 4.06, 3.2], [165.41, 171.12, 1.76, 3.2], [164.95, 173.84, 6.36, 3.2], [168.63, 168.4, 4.52, 3.2], [166.79, 171.12, 6.36, 3.2], [166.33, 168.4, 2.68, 3.2], [164.03, 168.4, 2.68, 3.2], [169.55, 162.96, 2.68, 3.2], [169.55, 165.68, 3.6, 3.2], [167.71, 149.36, 3.6, 3.2], [168.17, 154.8, 1.76, 3.2], [167.71, 146.64, 3.6, 3.2], [169.55, 154.8, 2.68, 3.2], [169.09, 152.08, 3.14, 3.2], [170.47, 141.2, 1.76, 3.2], [167.71, 127.6, 3.6, 3.2], [165.41, 130.32, 2.68, 3.2], [167.71, 130.32, 3.6, 3.2], [168.63, 135.76, 4.52, 3.2], [166.33, 133.04, 4.06, 3.2], [170.01, 133.04, 4.06, 3.2], [170.01, 124.88, 1.76, 3.2], [170.93, 127.6, 3.6, 3.2], [166.33, 135.76, 2.68, 3.2], [175.53, 149.36, 3.6, 3.2], [176.91, 133.04, 2.68, 3.2], [77.09, 48.72, 4.98, 3.2], [173.69, 92.24, 3.6, 3.2], [174.61, 97.68, 2.68, 3.2], [174.15, 105.84, 2.68, 3.2], [172.77, 84.08, 4.06, 3.2], [173.23, 114.0, 4.52, 3.2], [170.93, 97.68, 4.06, 3.2], [171.85, 81.36, 3.6, 3.2], [174.15, 94.96, 4.06, 3.2], [171.85, 108.56, 4.06, 3.2], [170.93, 111.28, 5.9, 3.2], [172.77, 89.52, 4.98, 3.2], [171.39, 86.8, 6.36, 3.2], [177.83, 94.96, 3.6, 3.2], [177.83, 114.0, 3.14, 3.2], [176.45, 111.28, 3.6, 3.2], [177.37, 89.52, 4.52, 3.2], [181.05, 92.24, 3.6, 3.2], [177.83, 92.24, 3.6, 3.2], [170.01, 94.96, 4.52, 3.2], [167.71, 94.96, 2.68, 3.2], [168.63, 114.0, 4.98, 3.2], [171.85, 100.4, 2.68, 3.2], [170.93, 105.84, 3.6, 3.2], [167.25, 111.28, 4.06, 3.2], [168.63, 105.84, 1.76, 3.2], [168.17, 97.68, 3.14, 3.2], [168.63, 108.56, 3.6, 3.2], [168.17, 86.8, 3.6, 3.2], [165.41, 84.08, 1.76, 3.2], [165.87, 89.52, 3.6, 3.2], [169.55, 84.08, 3.6, 3.2], [165.41, 86.8, 3.14, 3.2], [169.09, 89.52, 4.06, 3.2], [166.79, 84.08, 3.14, 3.2], [167.71, 92.24, 6.36, 3.2], [165.41, 92.24, 2.68, 3.2]], "shared": [[115.73, 116.72, 3.6, 3.2], [113.89, 201.04, 3.6, 3.2], [167.71, 203.76, 3.6, 3.2], [165.41, 203.76, 2.68, 3.2], [123.55, 233.68, 2.68, 3.2], [123.09, 236.4, 3.6, 3.2], [122.17, 250.0, 3.6, 3.2], [123.09, 230.96, 3.6, 3.2], [122.63, 211.92, 3.6, 3.2], [123.55, 214.64, 2.68, 3.2], [125.39, 279.92, 3.6, 3.2], [126.31, 285.36, 3.6, 3.2], [116.19, 266.32, 2.68, 3.2], [110.67, 271.76, 3.6, 3.2], [108.37, 285.36, 4.98, 3.2], [111.59, 277.2, 4.98, 3.2], [111.13, 255.44, 4.98, 3.2], [114.35, 279.92, 1.76, 3.2], [105.61, 277.2, 3.14, 3.2], [117.11, 260.88, 3.6, 3.2], [115.73, 252.72, 4.98, 3.2], [112.05, 233.68, 4.98, 3.2], [110.21, 236.4, 3.14, 3.2], [110.21, 214.64, 3.14, 3.2], [107.45, 233.68, 1.76, 3.2], [106.53, 206.48, 3.14, 3.2], [108.83, 214.64, 1.76, 3.2], [108.37, 209.2, 1.76, 3.2], [115.73, 220.08, 4.98, 3.2], [120.33, 220.08, 3.6, 3.2], [123.55, 130.32, 2.68, 3.2], [120.33, 190.16, 3.6, 3.2], [115.73, 190.16, 4.98, 3.2], [117.11, 198.32, 2.68, 3.2], [109.29, 130.32, 3.6, 3.2], [109.75, 133.04, 3.6, 3.2], [112.51, 141.2, 3.6, 3.2], [110.21, 127.6, 3.14, 3.2], [113.43, 143.92, 4.98, 3.2], [113.43, 127.6, 1.76, 3.2], [114.81, 119.44, 4.98, 3.2], [113.43, 133.04, 4.98, 3.2], [172.77, 168.4, 4.98, 3.2], [172.77, 165.68, 4.52, 3.2], [183.81, 179.28, 4.52, 3.2], [183.81, 190.16, 4.52, 3.2], [184.27, 182.0, 4.52, 3.2], [160.81, 173.84, 4.06, 3.2], [161.27, 198.32, 3.6, 3.2], [160.35, 192.88, 4.52, 3.2], [158.05, 190.16, 4.06, 3.2], [154.83, 192.88, 2.68, 3.2], [152.99, 184.72, 4.06, 3.2], [158.51, 195.6, 3.6, 3.2], [171.85, 162.96, 2.68, 3.2], [30.63, 203.76, 3.6, 3.2], [24.19, 146.64, 3.14, 3.2], [28.79, 160.24, 5.9, 3.2], [23.27, 152.08, 4.98, 3.2], [25.57, 154.8, 2.68, 3.2], [29.71, 198.32, 3.6, 3.2], [33.85, 152.08, 4.98, 3.2], [36.15, 149.36, 3.6, 3.2], [27.87, 152.08, 6.36, 3.2], [27.87, 154.8, 6.36, 3.2], [26.95, 146.64, 4.06, 3.2], [78.93, 160.24, 4.52, 3.2], [77.55, 157.52, 4.52, 3.2], [74.79, 160.24, 4.52, 3.2], [69.27, 146.64, 4.52, 3.2], [70.65, 154.8, 3.6, 3.2], [70.19, 143.92, 4.52, 3.2], [70.19, 141.2, 4.52, 3.2], [87.67, 154.8, 4.52, 3.2], [87.67, 143.92, 4.52, 3.2], [79.85, 152.08, 4.52, 3.2], [78.47, 141.2, 4.52, 3.2], [75.71, 152.08, 4.52, 3.2], [77.55, 135.76, 4.52, 3.2], [74.79, 54.16, 3.14, 3.2], [74.33, 51.44, 4.06, 3.2], [72.03, 46.0, 4.06, 3.2], [78.47, 94.96, 1.76, 3.2], [79.85, 94.96, 3.6, 3.2], [81.69, 105.84, 4.06, 3.2], [75.71, 103.12, 1.76, 3.2], [76.63, 100.4, 4.52, 3.2], [71.11, 51.44, 3.6, 3.2], [68.35, 43.28, 3.14, 3.2], [87.67, 51.44, 3.14, 3.2], [83.99, 51.44, 3.6, 3.2], [87.67, 46.0, 4.52, 3.2], [87.67, 40.56, 5.9, 3.2], [77.55, 54.16, 3.6, 3.2], [79.85, 59.6, 3.14, 3.2], [77.09, 37.84, 4.06, 3.2], [25.57, 97.68, 3.6, 3.2], [26.03, 100.4, 4.06, 3.2], [30.63, 94.96, 4.52, 3.2], [27.87, 94.96, 3.14, 3.2], [38.45, 97.68, 2.68, 3.2], [36.15, 100.4, 4.06, 3.2], [29.71, 100.4, 4.52, 3.2], [29.71, 92.24, 2.68, 3.2], [124.47, 73.2, 3.6, 3.2], [113.43, 73.2, 1.76, 3.2], [106.53, 73.2, 3.6, 3.2], [110.67, 89.52, 2.68, 3.2], [112.05, 81.36, 3.14, 3.2], [109.75, 94.96, 3.6, 3.2], [111.13, 75.92, 4.98, 3.2], [113.43, 105.84, 4.98, 3.2], [113.43, 103.12, 3.6, 3.2], [113.43, 100.4, 1.76, 3.2], [108.83, 97.68, 3.14, 3.2], [114.81, 89.52, 4.98, 3.2], [120.33, 86.8, 3.6, 3.2], [112.51, 59.6, 2.68, 3.2], [110.21, 62.32, 3.14, 3.2], [110.67, 67.76, 2.68, 3.2], [115.73, 51.44, 4.98, 3.2], [113.43, 67.76, 1.76, 3.2], [114.81, 59.6, 3.6, 3.2], [114.81, 54.16, 3.6, 3.2]], "region accumulators": [[118.95, 116.72, 3.6, 3.2], [123.55, 135.76, 2.68, 3.2], [118.03, 133.04, 10.04, 3.2], [118.03, 143.92, 10.04, 3.2], [124.47, 138.48, 3.6, 3.2], [111.59, 146.64, 3.6, 3.2], [114.81, 138.48, 10.04, 3.2], [112.51, 130.32, 3.6, 3.2], [110.67, 135.76, 3.6, 3.2], [115.73, 141.2, 4.98, 3.2], [118.95, 149.36, 3.6, 3.2], [114.81, 146.64, 10.04, 3.2], [120.33, 141.2, 4.06, 3.2], [115.73, 130.32, 4.98, 3.2], [114.81, 124.88, 4.52, 3.2], [113.89, 135.76, 10.04, 3.2], [113.89, 122.16, 10.04, 3.2], [114.81, 127.6, 10.04, 3.2], [120.33, 130.32, 3.6, 3.2], [150.69, 29.68, 2.68, 3.2], [149.31, 21.52, 2.68, 3.2], [149.31, 26.96, 2.68, 3.2], [170.01, 32.4, 6.36, 3.2], [170.93, 29.68, 6.36, 3.2], [160.81, 29.68, 4.06, 3.2], [161.73, 32.4, 4.52, 3.2], [165.87, 32.4, 4.52, 3.2], [164.95, 29.68, 6.36, 3.2], [157.59, 29.68, 3.6, 3.2], [152.99, 32.4, 2.68, 3.2], [158.51, 32.4, 3.6, 3.2], [155.29, 32.4, 3.6, 3.2], [152.99, 29.68, 2.68, 3.2], [155.29, 29.68, 2.68, 3.2], [182.43, 32.4, 4.52, 3.2], [175.99, 32.4, 1.76, 3.2], [177.83, 32.4, 4.98, 3.2], [176.91, 29.68, 6.36, 3.2], [182.89, 29.68, 4.06, 3.2], [173.69, 54.16, 3.6, 3.2], [172.77, 51.44, 4.06, 3.2], [173.23, 43.28, 4.52, 3.2], [170.93, 37.84, 6.36, 3.2], [170.01, 46.0, 6.36, 3.2], [170.93, 35.12, 6.36, 3.2], [170.93, 40.56, 6.36, 3.2], [174.61, 48.72, 3.14, 3.2], [170.93, 48.72, 4.06, 3.2], [167.25, 51.44, 2.68, 3.2], [164.95, 51.44, 2.68, 3.2], [169.55, 51.44, 3.6, 3.2], [160.81, 35.12, 4.06, 3.2], [160.35, 37.84, 4.98, 3.2], [161.27, 40.56, 3.6, 3.2], [161.73, 46.0, 3.14, 3.2], [160.81, 43.28, 3.14, 3.2], [168.63, 54.16, 2.68, 3.2], [170.93, 54.16, 3.14, 3.2], [158.05, 40.56, 3.6, 3.2], [155.75, 40.56, 2.68, 3.2], [154.37, 35.12, 3.6, 3.2], [154.37, 37.84, 3.14, 3.2], [158.51, 43.28, 2.68, 3.2], [152.07, 37.84, 2.68, 3.2], [152.07, 35.12, 2.68, 3.2], [157.13, 37.84, 3.6, 3.2], [157.59, 35.12, 3.6, 3.2], [165.87, 48.72, 3.6, 3.2], [166.33, 46.0, 4.06, 3.2], [166.79, 43.28, 6.36, 3.2], [164.95, 40.56, 6.36, 3.2], [164.95, 37.84, 6.36, 3.2], [164.95, 35.12, 6.36, 3.2], [163.57, 43.28, 3.6, 3.2], [163.57, 48.72, 2.68, 3.2], [176.45, 51.44, 3.6, 3.2], [186.11, 37.84, 2.68, 3.2], [185.19, 35.12, 3.6, 3.2], [184.73, 40.56, 3.6, 3.2], [185.19, 43.28, 3.14, 3.2], [177.83, 48.72, 3.6, 3.2], [177.83, 43.28, 4.52, 3.2], [179.67, 46.0, 3.6, 3.2], [176.91, 35.12, 4.52, 3.2], [181.05, 40.56, 4.06, 3.2], [177.83, 37.84, 4.98, 3.2], [176.91, 40.56, 4.52, 3.2], [181.97, 43.28, 3.6, 3.2], [182.89, 46.0, 2.68, 3.2], [175.99, 46.0, 4.06, 3.2], [181.05, 35.12, 4.52, 3.2], [182.43, 37.84, 4.06, 3.2], [118.03, 46.0, 10.04, 3.2], [115.73, 92.24, 10.04, 3.2], [118.03, 105.84, 10.04, 3.2], [123.09, 94.96, 10.04, 3.2], [115.73, 114.0, 10.04, 3.2], [115.73, 75.92, 10.04, 3.2], [114.81, 73.2, 10.04, 3.2], [109.75, 73.2, 3.6, 3.2], [111.59, 97.68, 3.6, 3.2], [109.29, 92.24, 3.6, 3.2], [112.51, 92.24, 3.6, 3.2], [113.43, 94.96, 10.04, 3.2], [109.75, 78.64, 3.6, 3.2], [112.51, 114.0, 3.6, 3.2], [116.65, 103.12, 3.6, 3.2], [115.73, 100.4, 4.98, 3.2], [114.81, 97.68, 10.04, 3.2], [118.95, 111.28, 3.6, 3.2], [114.81, 108.56, 10.04, 3.2], [119.87, 103.12, 3.6, 3.2], [115.73, 86.8, 4.98, 3.2], [114.81, 81.36, 10.04, 3.2], [113.43, 78.64, 10.04, 3.2], [114.81, 84.08, 4.06, 3.2], [113.43, 86.8, 2.68, 3.2], [111.13, 70.48, 4.06, 3.2], [111.59, 65.04, 3.6, 3.2], [113.89, 62.32, 10.04, 3.2], [115.73, 56.88, 4.98, 3.2], [118.03, 67.76, 4.98, 3.2], [118.03, 65.04, 3.6, 3.2], [114.81, 70.48, 10.04, 3.2], [118.03, 59.6, 4.06, 3.2], [121.25, 65.04, 2.68, 3.2], [114.81, 65.04, 3.6, 3.2], [114.81, 67.76, 3.6, 3.2], [108.83, 70.48, 2.68, 3.2], [114.81, 48.72, 10.04, 3.2], [114.81, 46.0, 3.6, 3.2], [116.65, 43.28, 3.6, 3.2], [168.63, 16.08, 6.36, 3.2], [171.85, 10.64, 4.06, 3.2], [173.69, 13.36, 4.06, 3.2], [171.85, 26.96, 4.98, 3.2], [171.85, 18.8, 6.36, 3.2], [173.69, 24.24, 6.36, 3.2], [174.61, 16.08, 3.14, 3.2], [173.69, 21.52, 4.06, 3.2], [185.65, 10.64, 2.68, 3.2], [185.65, 26.96, 2.68, 3.2], [185.19, 18.8, 2.68, 3.2], [186.11, 13.36, 2.68, 3.2], [184.73, 16.08, 3.14, 3.2], [185.65, 21.52, 3.14, 3.2], [175.53, 10.64, 1.76, 3.2], [181.05, 10.64, 2.68, 3.2], [177.83, 10.64, 3.6, 3.2], [183.35, 10.64, 2.68, 3.2], [177.83, 16.08, 4.06, 3.2], [180.59, 13.36, 3.6, 3.2], [177.83, 21.52, 4.98, 3.2], [177.83, 18.8, 4.52, 3.2], [182.43, 21.52, 3.6, 3.2], [181.97, 18.8, 3.6, 3.2], [179.67, 24.24, 4.98, 3.2], [177.83, 26.96, 4.52, 3.2], [181.97, 26.96, 4.06, 3.2], [184.27, 24.24, 2.68, 3.2], [177.37, 13.36, 3.6, 3.2], [181.51, 16.08, 3.6, 3.2], [183.81, 13.36, 2.68, 3.2], [161.27, 16.08, 3.6, 3.2], [161.73, 24.24, 3.14, 3.2], [157.59, 10.64, 2.68, 3.2], [162.19, 13.36, 2.68, 3.2], [162.19, 10.64, 2.68, 3.2], [161.27, 18.8, 3.6, 3.2], [162.19, 26.96, 4.06, 3.2], [160.35, 21.52, 3.6, 3.2], [159.89, 10.64, 2.68, 3.2], [159.89, 13.36, 2.68, 3.2], [167.71, 10.64, 4.52, 3.2], [158.97, 26.96, 3.6, 3.2], [164.95, 10.64, 3.14, 3.2], [167.71, 24.24, 6.36, 3.2], [165.87, 26.96, 6.36, 3.2], [163.57, 21.52, 4.52, 3.2], [165.87, 18.8, 6.36, 3.2], [166.79, 13.36, 4.52, 3.2], [164.49, 16.08, 4.52, 3.2], [167.71, 21.52, 6.36, 3.2], [164.95, 24.24, 3.14, 3.2], [170.93, 13.36, 3.14, 3.2], [155.29, 21.52, 2.68, 3.2], [152.99, 21.52, 2.68, 3.2], [153.91, 18.8, 2.68, 3.2], [155.29, 13.36, 2.68, 3.2], [156.21, 18.8, 2.68, 3.2], [154.83, 24.24, 2.68, 3.2], [157.59, 21.52, 3.14, 3.2], [154.37, 16.08, 2.68, 3.2], [154.37, 26.96, 2.68, 3.2], [158.51, 18.8, 3.14, 3.2], [156.67, 26.96, 2.68, 3.2], [157.13, 24.24, 2.68, 3.2], [159.43, 24.24, 2.68, 3.2], [152.07, 26.96, 2.68, 3.2], [150.23, 24.24, 2.68, 3.2], [152.53, 24.24, 2.68, 3.2], [152.07, 16.08, 2.68, 3.2], [152.99, 13.36, 2.68, 3.2], [158.97, 16.08, 2.68, 3.2], [157.59, 13.36, 2.68, 3.2], [156.67, 16.08, 2.68, 3.2]], "column accumulators": [[117.11, 201.04, 3.6, 3.2], [109.75, 201.04, 3.6, 3.2], [115.73, 239.12, 10.04, 3.2], [115.73, 228.24, 10.04, 3.2], [116.19, 244.56, 10.04, 3.2], [124.47, 247.28, 3.6, 3.2], [112.97, 244.56, 3.6, 3.2], [120.33, 252.72, 4.98, 3.2], [124.93, 252.72, 4.52, 3.2], [115.73, 209.2, 10.04, 3.2], [115.73, 206.48, 10.04, 3.2], [115.73, 255.44, 10.04, 3.2], [116.19, 277.2, 10.04, 3.2], [115.73, 282.64, 10.04, 3.2], [115.73, 279.92, 10.04, 3.2], [116.19, 217.36, 10.04, 3.2], [126.31, 282.64, 4.98, 3.2], [109.75, 279.92, 3.6, 3.2], [109.75, 274.48, 3.6, 3.2], [111.13, 282.64, 4.98, 3.2], [113.89, 266.32, 2.68, 3.2], [113.89, 271.76, 10.04, 3.2], [113.43, 274.48, 10.04, 3.2], [113.43, 285.36, 10.04, 3.2], [117.11, 269.04, 3.6, 3.2], [113.43, 269.04, 4.06, 3.2], [108.37, 277.2, 3.6, 3.2], [107.91, 282.64, 3.6, 3.2], [105.15, 285.36, 3.6, 3.2], [107.91, 255.44, 3.6, 3.2], [113.43, 258.16, 10.04, 3.2], [113.89, 260.88, 3.6, 3.2], [112.05, 206.48, 4.06, 3.2], [109.75, 230.96, 3.6, 3.2], [112.51, 222.8, 3.6, 3.2], [112.51, 228.24, 3.6, 3.2], [115.73, 222.8, 4.98, 3.2], [112.51, 239.12, 3.6, 3.2], [109.75, 217.36, 3.6, 3.2], [109.75, 209.2, 3.6, 3.2], [109.75, 211.92, 3.6, 3.2], [121.25, 233.68, 2.68, 3.2], [116.65, 225.52, 4.06, 3.2], [116.65, 233.68, 4.98, 3.2], [113.43, 236.4, 10.04, 3.2], [113.43, 230.96, 10.04, 3.2], [113.89, 241.84, 10.04, 3.2], [108.83, 233.68, 3.6, 3.2], [113.89, 214.64, 10.04, 3.2], [112.97, 211.92, 10.04, 3.2], [113.43, 203.76, 10.04, 3.2], [113.43, 209.2, 2.68, 3.2], [116.19, 184.72, 10.04, 3.2], [110.67, 198.32, 2.68, 3.2], [118.95, 187.44, 3.6, 3.2], [115.73, 192.88, 4.98, 3.2], [113.89, 182.0, 10.04, 3.2], [113.43, 198.32, 4.06, 3.2], [112.97, 184.72, 3.6, 3.2]], "run/done flag": [[167.71, 282.64, 10.04, 3.2], [166.33, 279.92, 2.68, 3.2], [29.71, 201.04, 10.04, 3.2]], "success latch": [[167.71, 271.76, 10.04, 3.2], [171.85, 279.92, 10.04, 3.2], [172.77, 277.2, 4.52, 3.2], [174.15, 274.48, 1.76, 3.2], [170.01, 274.48, 4.52, 3.2], [168.63, 279.92, 3.6, 3.2], [168.63, 277.2, 4.52, 3.2], [170.93, 269.04, 3.14, 3.2], [123.09, 274.48, 3.6, 3.2], [109.75, 258.16, 3.6, 3.2], [104.69, 282.64, 3.6, 3.2], [115.73, 247.28, 3.6, 3.2], [109.29, 239.12, 3.6, 3.2], [112.97, 217.36, 3.6, 3.2], [115.73, 187.44, 3.6, 3.2], [109.75, 138.48, 3.6, 3.2], [115.73, 149.36, 3.6, 3.2], [119.41, 119.44, 3.6, 3.2], [73.87, 154.8, 4.06, 3.2], [74.79, 157.52, 3.14, 3.2], [70.65, 152.08, 4.06, 3.2], [67.89, 152.08, 3.14, 3.2], [84.45, 143.92, 1.76, 3.2], [78.93, 92.24, 1.76, 3.2], [78.93, 24.24, 3.14, 3.2], [79.85, 18.8, 4.06, 3.2], [76.17, 24.24, 3.14, 3.2], [81.69, 24.24, 4.06, 3.2], [115.73, 111.28, 3.6, 3.2], [120.33, 100.4, 3.6, 3.2], [107.91, 75.92, 3.6, 3.2], [120.33, 51.44, 3.6, 3.2]], "cell counter (mod 11)": [[26.03, 143.92, 10.04, 3.2], [28.79, 157.52, 10.04, 3.2], [26.03, 149.36, 10.04, 3.2], [30.63, 146.64, 10.04, 3.2], [28.79, 141.2, 6.36, 3.2]], "input delay line": [[75.25, 146.64, 10.04, 3.2], [81.69, 157.52, 10.04, 3.2], [74.79, 143.92, 10.04, 3.2], [76.63, 162.96, 10.04, 3.2], [83.99, 152.08, 10.04, 3.2], [84.91, 146.64, 10.04, 3.2], [76.63, 138.48, 10.04, 3.2], [81.69, 135.76, 10.04, 3.2], [82.61, 141.2, 10.04, 3.2], [77.55, 149.36, 10.04, 3.2], [77.55, 154.8, 10.04, 3.2], [77.55, 133.04, 10.04, 3.2]], "adjacency check": [[83.07, 160.24, 4.06, 3.2], [68.35, 149.36, 4.52, 3.2], [87.67, 149.36, 10.04, 3.2], [80.77, 103.12, 4.98, 3.2], [78.47, 105.84, 3.6, 3.2], [77.09, 97.68, 1.76, 3.2], [84.91, 100.4, 2.22, 3.2]], "verdict/output shared": [[81.69, 32.4, 3.6, 3.2], [74.79, 48.72, 2.68, 3.2], [74.33, 56.88, 3.6, 3.2], [75.25, 43.28, 1.76, 3.2], [73.41, 40.56, 3.6, 3.2], [74.79, 37.84, 2.68, 3.2], [71.11, 48.72, 3.6, 3.2], [69.27, 46.0, 3.14, 3.2], [71.11, 43.28, 3.6, 3.2], [66.97, 46.0, 2.68, 3.2], [81.69, 48.72, 10.04, 3.2], [82.61, 43.28, 10.04, 3.2], [80.77, 37.84, 10.04, 3.2], [78.01, 51.44, 6.36, 3.2], [80.77, 54.16, 10.04, 3.2], [77.55, 56.88, 10.04, 3.2], [76.63, 43.28, 6.36, 3.2], [76.63, 40.56, 10.04, 3.2], [77.55, 35.12, 10.04, 3.2], [75.71, 46.0, 10.04, 3.2], [91.35, 48.72, 3.14, 3.2], [91.81, 46.0, 3.6, 3.2]], "row accumulator": [[81.69, 97.68, 10.04, 3.2], [87.67, 100.4, 1.76, 3.2], [80.77, 92.24, 10.04, 3.2], [78.93, 108.56, 10.04, 3.2], [78.47, 97.68, 3.6, 3.2], [80.77, 100.4, 4.52, 3.2], [80.77, 111.28, 2.68, 3.2], [76.17, 108.56, 2.68, 3.2], [77.09, 103.12, 4.06, 3.2]], "row counter": [[28.79, 97.68, 10.04, 3.2], [28.79, 108.56, 10.04, 3.2], [32.01, 92.24, 10.04, 3.2], [36.15, 94.96, 4.52, 3.2], [32.93, 103.12, 10.04, 3.2], [29.71, 105.84, 4.06, 3.2], [26.49, 105.84, 3.6, 3.2], [33.39, 105.84, 1.76, 3.2], [26.95, 103.12, 6.36, 3.2]]}}</script>
+<script>
+(function () {
+  var D = JSON.parse(document.getElementById("chipdata").textContent);
+  var N = 11, S = 32, PAD = 16;
+  var svg = document.getElementById("grid");
+  var NS = "http://www.w3.org/2000/svg";
+
+  function el(name, attrs) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function starPath(cx, cy, r) {
+    var p = [];
+    for (var i = 0; i < 10; i++) {
+      var ang = -Math.PI / 2 + i * Math.PI / 5;
+      var rad = i % 2 ? r * 0.42 : r;
+      p.push((i ? "L" : "M") + (cx + rad * Math.cos(ang)).toFixed(2) + " " +
+             (cy + rad * Math.sin(ang)).toFixed(2));
+    }
+    return p.join(" ") + " Z";
+  }
+
+  var cellRects = [], starEls = [];
+  var gCells = el("g", {}), gBorders = el("g", {}), gStars = el("g", {});
+  for (var r = 0; r < N; r++) {
+    for (var c = 0; c < N; c++) {
+      var rect = el("rect", {
+        x: PAD + c * S, y: PAD + r * S, width: S, height: S,
+        fill: "var(--surface)", stroke: "var(--line)", "stroke-width": 1
+      });
+      gCells.appendChild(rect);
+      cellRects.push(rect);
+      var st = el("path", { d: starPath(PAD + c * S + S / 2, PAD + r * S + S / 2, 10),
+                            fill: "var(--star)", opacity: 0 });
+      gStars.appendChild(st);
+      starEls.push(st);
+    }
+  }
+  for (var r = 0; r <= N; r++) {
+    for (var c = 0; c <= N; c++) {
+      if (c < N && (r === 0 || r === N || D.regions[r - 1][c] !== D.regions[r][c])) {
+        gBorders.appendChild(el("line", { x1: PAD + c * S, y1: PAD + r * S,
+          x2: PAD + (c + 1) * S, y2: PAD + r * S,
+          stroke: "var(--line-strong)", "stroke-width": 2.5, "stroke-linecap": "square" }));
+      }
+      if (r < N && (c === 0 || c === N || D.regions[r][c - 1] !== D.regions[r][c])) {
+        gBorders.appendChild(el("line", { x1: PAD + c * S, y1: PAD + r * S,
+          x2: PAD + c * S, y2: PAD + (r + 1) * S,
+          stroke: "var(--line-strong)", "stroke-width": 2.5, "stroke-linecap": "square" }));
+      }
+    }
+  }
+  var cursor = el("rect", { width: S, height: S, fill: "none",
+    stroke: "var(--accent)", "stroke-width": 3, opacity: 0 });
+  svg.appendChild(gCells); svg.appendChild(gStars);
+  svg.appendChild(gBorders); svg.appendChild(cursor);
+
+  var colsEl = document.getElementById("cols"), regsEl = document.getElementById("regs");
+  var colT = [], regT = [];
+  for (var i = 0; i < N; i++) {
+    var d1 = document.createElement("div");
+    d1.className = "t"; d1.innerHTML = "<i>c" + i + "</i><span>0</span>";
+    colsEl.appendChild(d1); colT.push(d1);
+    var d2 = document.createElement("div");
+    d2.className = "t"; d2.innerHTML = "<i>" + D.letters[i] + "</i><span>0</span>";
+    regsEl.appendChild(d2); regT.push(d2);
+  }
+
+  function setT(node, v) {
+    node.querySelector("span").textContent = v >= 3 ? "3+" : v;
+    node.className = "t" + (v >= 3 ? " over" : (v === 2 ? " hit" : ""));
+  }
+
+  var frame = 0, playing = false, timer = null;
+  var scrub = document.getElementById("scrub");
+  scrub.max = D.frames.length - 1;
+
+  function render(i) {
+    var f = D.frames[i];
+    var consumed = Math.min(i, N * N);
+    for (var k = 0; k < N * N; k++) {
+      var on = k < consumed && D.bits[k] === 1;
+      starEls[k].setAttribute("opacity", on ? 1 : 0);
+      cellRects[k].setAttribute("fill", k < consumed ? "var(--surface-2)" : "var(--surface)");
+    }
+    if (i < N * N) {
+      cursor.setAttribute("x", PAD + (i % N) * S);
+      cursor.setAttribute("y", PAD + Math.floor(i / N) * S);
+      cursor.setAttribute("opacity", 1);
+    } else {
+      cursor.setAttribute("opacity", 0);
+    }
+    document.getElementById("m-cell").textContent = f.cell;
+    document.getElementById("m-row").textContent = f.row;
+    document.getElementById("m-rowacc").textContent = f.rowacc >= 3 ? "3+" : f.rowacc;
+    for (var c = 0; c < N; c++) { setT(colT[c], f.columns[c]); setT(regT[c], f.regions[c]); }
+    var lamp = document.getElementById("lamp");
+    lamp.className = "lamp" + (f.success ? " on" : "");
+    var s = "";
+    for (var j = 0; j <= i; j++) {
+      var g = D.frames[j];
+      if (g.success && g.O) s += String.fromCharCode(g.O);
+    }
+    document.getElementById("ostr").textContent = s || " ";
+    document.getElementById("cyc").textContent = "cycle " + i;
+    scrub.value = i;
+  }
+
+  function tick() {
+    frame = (frame + 1) % D.frames.length;
+    render(frame);
+    if (frame === D.frames.length - 1) stop();
+  }
+  function stop() {
+    playing = false; clearInterval(timer);
+    document.getElementById("play").textContent = "Play";
+  }
+  document.getElementById("play").addEventListener("click", function () {
+    if (playing) { stop(); return; }
+    if (frame >= D.frames.length - 1) frame = 0;
+    playing = true; this.textContent = "Pause";
+    timer = setInterval(tick, 90);
+  });
+  scrub.addEventListener("input", function () { stop(); frame = +this.value; render(frame); });
+  render(0);
+
+  var ORDER = ["cell counter (mod 11)", "row counter", "input delay line", "adjacency check",
+               "row accumulator", "column accumulators", "region accumulators",
+               "success latch", "output generator", "verdict/output shared", "run/done flag"];
+  var floor = document.getElementById("floor");
+  var all = [];
+  for (var b in D.panels) all = all.concat(D.panels[b]);
+  var die = D.die, canvases = [];
+
+  ORDER.forEach(function (name) {
+    var cells = D.panels[name] || [];
+    var fig = document.createElement("div");
+    fig.className = "fp";
+    var cv = document.createElement("canvas");
+    fig.appendChild(cv);
+    var h = document.createElement("h3");
+    h.textContent = name === "cell counter (mod 11)" ? "cell counter" : name;
+    fig.appendChild(h);
+    var p = document.createElement("p"); p.textContent = cells.length + " cells"; fig.appendChild(p);
+    floor.appendChild(fig);
+    canvases.push({ cv: cv, cells: cells });
+  });
+
+  function draw() {
+    var cs = getComputedStyle(document.documentElement);
+    var ctx0 = cs.getPropertyValue("--line").trim();
+    var acc = cs.getPropertyValue("--accent").trim();
+    var surf = cs.getPropertyValue("--surface-2").trim();
+    canvases.forEach(function (o) {
+      var w = o.cv.clientWidth || 160;
+      var scale = w / die.w, h = die.h * scale;
+      var dpr = window.devicePixelRatio || 1;
+      o.cv.width = Math.round(w * dpr); o.cv.height = Math.round(h * dpr);
+      o.cv.style.height = h + "px";
+      var g = o.cv.getContext("2d");
+      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      g.clearRect(0, 0, w, h);
+      g.fillStyle = surf;
+      g.fillRect(0, 0, w, h);
+      function px(cell) {
+        return [(cell[0] - die.x) * scale, h - (cell[1] - die.y + cell[3]) * scale,
+                Math.max(cell[2] * scale, 0.7), Math.max(cell[3] * scale, 0.7)];
+      }
+      g.fillStyle = ctx0;
+      all.forEach(function (c) { var q = px(c); g.fillRect(q[0], q[1], q[2], q[3]); });
+      g.fillStyle = acc;
+      o.cells.forEach(function (c) { var q = px(c); g.fillRect(q[0], q[1], q[2], q[3]); });
+      g.strokeStyle = ctx0; g.lineWidth = 1;
+      g.strokeRect(0.5, 0.5, w - 1, h - 1);
+    });
+  }
+  draw();
+  window.addEventListener("resize", draw);
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mq.addEventListener) mq.addEventListener("change", draw);
+  }
+  new MutationObserver(draw).observe(document.documentElement, {
+    attributes: true, attributeFilter: ["data-theme"] });
+})();
+</script>
