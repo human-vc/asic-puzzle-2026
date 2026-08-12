@@ -17,7 +17,13 @@ Repo: `/Users/jacobcrainic/asic-puzzle-2026`. All numbers below are the verified
 
 **Shape: result-first, then pipeline order, with two narrative set-pieces placed for maximum load (the cycle-124 miter failure, and the output generator).**
 
-**Target: 3,000–3,600 words of narrative + one summary table + one block ledger table + 3 figures + ~6 blocks of pasted raw tool output. Hard ceiling 4,000.**
+**Target: 2,500–3,000 words of narrative + one summary table + one block ledger table + 3 figures + ~6 blocks of pasted raw tool output. Hard ceiling 3,400.**
+
+**Measured lengths (counted 2026-08-12, not estimated).** The seven featured submissions: Saab 337, Skarman 552, Michon 663 (prose only — his per-day table was stripped by the counter and is where his real content sits), Citerin 1,476, Gajdusek 2,581, Cacqueray 10,546, Jhaveri 13,428. Median 1,476; five of seven are under 2,600. Jane Street's own posts are shorter than assumed: the neural-net follow-up 2,983, the ASIC puzzle post 1,215, the FPGA results 1,458.
+
+So 2,500-3,000 is at the TOP of the normal range, not the middle — state that as a deliberate choice, not as conformity. The justification is finding-count, not ambition: the short writeups each had exactly ONE headline thing (Saab a tapeout, Skarman a formal trick, Michon a framework), and at one thing 400 words suffices. This document has five (streaming architecture, the proof, the masked output generator, the return to hardware, the easter eggs). Budget ~300 words per finding, not ~800. If a section is running past 400, it is explaining rather than showing.
+
+**Two archetypes, and which this is.** The short writeups are POINTERS: the artifact is elsewhere, inspectable, and self-evidently impressive (Saab links a live TinyTapeout GDS viewer of his fabricated layout; Skarman's formal trick lives in `.sby` files; Michon's failures live in a table). The long ones are TEACHING documents where the prose is the deliverable. This document is mostly the latter, because the understanding — one-pass streaming verifier, message not in the layout — exists nowhere but prose and cannot be pointed at. Lean on the artifact half (runnable repo, clickable figure pack, buildable Tiny Tapeout project) to keep the prose honest and short.
 
 Justification from the research:
 
@@ -37,7 +43,16 @@ Justification from the research:
 
 Placement rule with no exceptions in the sample: limitations sit at the point of the claim they qualify. Not one of the nine has a closing "Limitations" section.
 
-**Register for every struggle passage — the Citerin pattern (adopted 2026-08-12).** His is the closest match to this material, and it runs in four beats with nothing else attached:
+**Per-struggle grammar (measured 2026-08-12).** Do NOT use one register for all five. The published sample uses different grammars and spends words in proportion to what a failure buys. Measured cost per dead end: Citerin 57 words, the NN post 26 / 26 / 53, Cacqueray 16-18, Michon 2 (a table cell). Note that Citerin's 57 is ~4% of his entire 1,476-word document — what made his sharp was paying for it at a tight budget, not absolute length.
+
+Assignment:
+- **Cycle 124 → Citerin grammar, full ~57 words.** It has a genuine wrong belief and a genuine self-correction; it is the one that can carry the fullest treatment.
+- **The unreadable message → NN chained-pivot, ~26 words.** One-sentence failure terminated by a new question, because the resolution genuinely came from asking whether the map was linear.
+- **The inert cells → NN meta step-back, ~53 words.** This is the escalation that earns a change in the level of the question, which is exactly what the NN post spends its longest failure passage on.
+- **k-induction → NN unresolved, ~26 words.** Their own precedent: failure 5 in the NN post costs two days, resolves nothing, and simply stops. No beat 4.
+- **The refactor that broke the proof → Cacqueray grammar, ~18 words.** One sentence plus the mechanism that caught it. No emotional content.
+
+**The Citerin pattern itself (for cycle 124 only) —** His is the closest match to this material, and it runs in four beats with nothing else attached:
 
 1. **Name the wrong belief plainly, in one clause.** "I misread the instructions and thought the Joltages were minimum values per machine, not exact values."
 2. **State the cost in concrete technical nouns, not adjectives.** "As a result, I wasted a lot of time trying to adapt the Simplex algorithm and branch-and-bounds/Gomory cuts to run on an FPGA." Naming the specific machinery that was wasted is what makes it read as reporting rather than performance. "I struggled a lot" would do nothing; "Simplex and Gomory cuts" does the work.
