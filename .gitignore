@@ -20,3 +20,4 @@ puzzle_resynth.v
 starbattle_hardcaml.v
 cells_behav.v
 sky130_hd_measured.lib
+.DS_Store
