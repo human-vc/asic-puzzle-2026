@@ -42,13 +42,12 @@ def main():
     s = Cadical153(bootstrap_with=be.clauses)
     sat = s.solve(assumptions=assume + [any_change])
     print("vars=%d clauses=%d" % (be.nvars, len(be.clauses)))
-    print("can any flop change after the machine has finished?  %s"
-          % ("YES" if sat else "NO -- the state is a fixed point"))
+    print("flops can move from an arbitrary finished state: %s" % ("yes" if sat else "no"))
     if sat:
         model = set(l for l in s.get_model() if l > 0)
         moved = [i for i, q in enumerate(order)
                  if (state[q] in model) != (nxt[q] in model)]
-        print("   flops that move: %s" % moved[:12])
+        print("  moving flops: %s" % moved[:12])
     s.delete()
 
     # and with reset asserted it must return to the reset state
@@ -61,8 +60,8 @@ def main():
         want = be2.one if kind == "dfstp" else be2.zero
         bad.append(be2.xor2(nx2[q], want))
     s2 = Cadical153(bootstrap_with=be2.clauses)
-    print("does asserting reset always restore the reset state?  %s"
-          % ("NO" if s2.solve(assumptions=[be2.orn(bad)]) else "YES"))
+    print("reset restores the reset state: %s"
+          % ("no" if s2.solve(assumptions=[be2.orn(bad)]) else "yes"))
     s2.delete()
 
 

@@ -63,11 +63,11 @@ def main():
 
     print("distinct nets: mine=%d  klayout=%d" % (len(a2b), len(b2a)))
     if conflicts:
-        print("PARTITIONS DISAGREE at %d sites; first few:" % len(conflicts))
+        print("partitions identical: no (%d sites disagree)" % len(conflicts))
         for c in conflicts[:5]:
             print("   ", c)
     else:
-        print("PARTITIONS ARE IDENTICAL -- the two extractions agree on every site.")
+        print("partitions identical: yes")
 
     sizes_a = collections.Counter()
     for k, a in mine.items():

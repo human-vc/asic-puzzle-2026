@@ -47,7 +47,5 @@ def hidden_in_stimulus(vcd="example_inputs.vcd"):
 
 
 if __name__ == "__main__":
-    print("morse, spelled by the placeholder cells below the die:")
-    print("   %r" % morse_below_die())
-    print("hidden in the example stimulus:")
-    print("   %r" % hidden_in_stimulus())
+    print("morse below the die:   %r" % morse_below_die())
+    print("hidden in the stimulus: %r" % hidden_in_stimulus())

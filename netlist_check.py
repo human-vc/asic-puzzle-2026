@@ -63,8 +63,8 @@ def main(path="puzzle_net.json"):
         print("  port %-9s driven by %s" % (p, drivers.get(p, "NOTHING")))
     unexpected = [n for n in undriven if n not in KNOWN_FLOATING]
     ok = not multi and not unexpected and not floating_inputs
-    print("\nknown floating nets (documented, not faults):", sorted(KNOWN_FLOATING))
-    print("RESULT:", "clean" if ok else "UNEXPECTED PROBLEMS FOUND")
+    print("known floating nets: %s" % sorted(KNOWN_FLOATING))
+    print("unexpected problems: %d" % (len(multi) + len(unexpected) + len(floating_inputs)))
     return ok
 
 

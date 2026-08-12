@@ -37,7 +37,7 @@ def main(path):
     fname = {}
     for i, f in enumerate(d.flops):
         fname[f[1]] = "F%02d" % i
-    print("=== flops ===")
+    print("flops")
     for f in d.flops:
         print("  %-5s %-9s q=%-12s inst=%s" % (fname[f[1]], f[0], f[1], f[5]))
 
@@ -48,19 +48,19 @@ def main(path):
             return n[4:]
         return n
 
-    print("\n=== next-state dependencies (D cone leaves) ===")
+    print("\nnext-state dependencies (D cone leaves)")
     deps = {}
     for f in d.flops:
         _, leaves = cone(d, f[2], stop)
         deps[f[1]] = leaves
         print("  %-5s <- %s" % (fname[f[1]], " ".join(sorted(label(l) for l in leaves))))
 
-    print("\n=== output cones ===")
+    print("\noutput cones")
     for name in ["net:success"] + ["net:O[%d]" % i for i in range(8)]:
         _, leaves = cone(d, name, stop)
         print("  %-12s <- %s" % (label(name), " ".join(sorted(label(l) for l in leaves))))
 
-    print("\n=== fan-out: which flops consume each flop ===")
+    print("\nfan-out: which flops consume each flop")
     consumers = collections.defaultdict(set)
     for f in d.flops:
         for l in deps[f[1]]:

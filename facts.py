@@ -94,16 +94,11 @@ def main():
     ]
 
     w = max(len(str(k)) for k, _ in out + quoted)
-    print("=" * 78)
-    print("RE-DERIVED FROM THE ARTIFACTS BY THIS SCRIPT")
-    print("=" * 78)
     for k, val in out:
-        print("  %-*s : %s" % (w, k, val))
+        print("%-*s  %s" % (w, k, val))
     print()
-    print("REPORTED BY OTHER SCRIPTS, QUOTED HERE (run them to re-derive)")
-    print("-" * 78)
     for k, val in quoted:
-        print("  %-*s : %s" % (w, k, val))
+        print("%-*s  %s" % (w, k, val))
 
 
 if __name__ == "__main__":

@@ -44,12 +44,12 @@ def main():
     col = assign(st, order, COLUMN_GROUPS)
 
     bad = [k for k in range(N) if len(reg[k]) != 1]
-    print("cells with a unique region hit: %d/121  (anomalies: %s)" % (N - len(bad), bad[:5]))
+    print("cells with a unique region hit: %d/121  anomalies: %s" % (N - len(bad), bad[:5]))
 
     colmap = [sorted(col[k])[0] if len(col[k]) == 1 else None for k in range(N)]
     ok = all(colmap[k] is not None for k in range(N))
-    print("column groups behave as columns:",
-          ok and all(len({colmap[r * 11 + c] for r in range(11)}) == 1 for c in range(11)))
+    print("column groups behave as columns: %s" %
+          (ok and all(len({colmap[r * 11 + c] for r in range(11)}) == 1 for c in range(11))))
 
     letters = "ABCDEFGHIJK"
     grid = [[letters[sorted(reg[r * 11 + c])[0]] if reg[r * 11 + c] else "?"

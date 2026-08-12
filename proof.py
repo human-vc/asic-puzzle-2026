@@ -92,8 +92,6 @@ def main():
             print("     ", "".join(map(str, bits)))
         s.delete()
 
-    print("\nEquivalence holds => the chip is exactly an 11x11 two-star Star Battle")
-    print("checker on the recovered regions, for all 2^121 input streams.")
 
     MAX_MODELS = 3
     s = Cadical153(bootstrap_with=be.clauses)
