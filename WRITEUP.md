@@ -11,8 +11,10 @@ checker that reads one bit per cycle, retains twelve of them, and still decides
 every rule. It accepts exactly one arrangement, and it releases
 `(* TWO STARS *)` only after that arrangement has cleared every constraint.
 
-This is the path I took: netlist out of the layout, tools built to interrogate
-it, the machine read out of the gates, three wrong turns, and then the answer.
+I went in expecting the extraction to be the wall. It wasn't, and everything
+interesting happened after it. This is the path I took: netlist out of the
+layout, tools built to interrogate it, the machine read out of the gates, three
+wrong turns, and then the answer.
 
 ![Recovered regions and the unique accepted grid](figures/puzzle.svg)
 
@@ -32,8 +34,8 @@ touch.*
 | Logic | 728 cells, including 92 flip-flops, beside 890 inert fill, tap, decap, and diode cells |
 | Extraction | 741 nets touching 5,094 resolved pin sites |
 
-Different rows rest on different kinds of evidence, and keeping them apart
-matters. 121 one-hot experiments establish the region map. Logic cones and
+Different rows rest on different kinds of evidence, and I have tried to keep them
+apart. 121 one-hot experiments establish the region map. Logic cones and
 physical placement identify the block boundaries. Bounded miters establish
 equivalence, and an independent Star Battle solver confirms the uniqueness the
 recovered predicate had already implied. Throughout this report, an exhaustive
@@ -67,10 +69,11 @@ distinct nets: mine=741  klayout=741
 partitions identical: yes
 ```
 
-Connectivity is not behaviour, so the cell library got its own check. Of the 66
-instantiated cells that carry behaviour, 63 combinational ones matched the
-SkyWater PDK over every input vector, and the three sequential ones ran a
-directed 16-step clock, reset, and set sequence without a mismatch.
+Connectivity is not behaviour, so I gave the cell library its own check before
+trusting anything downstream of it. Of the 66 instantiated cells that carry
+behaviour, 63 combinational ones matched the SkyWater PDK over every input
+vector, and the three sequential ones ran a directed 16-step clock, reset, and
+set sequence without a mismatch.
 
 ## The tools I built
 
@@ -104,20 +107,20 @@ The rest is smaller and mostly exists to keep me honest:
 
 ## Reading the machine out of the gates
 
-Once the nets were trustworthy, the arithmetic gave up the architecture before
-any individual cone did. 121 puzzle bits enter the circuit. Only 92 flip-flops
-exist, and 12 of those belong to the output generator. There is nowhere near
-enough state to hold the grid. Instead, each arriving bit bumps a handful of
-small counters and slides into a 12-stage history line, which lets the checker
-settle every rule as a stream.
+I got the architecture out of the arithmetic before I had properly read a single
+cone. 121 puzzle bits enter the circuit. Only 92 flip-flops exist, and 12 of
+those belong to the output generator. There is nowhere near enough state to hold
+the grid, which rules out every design I had been assuming. Instead, each
+arriving bit bumps a handful of small counters and slides into a 12-stage history
+line, which lets the checker settle every rule as a stream.
 
 ![The recovered datapath](figures/datapath.svg)
 
 *The whole machine. One bit enters on the left, and by the time it reaches the
 verdict it has been folded into a twelve-deep window and five small tallies.*
 
-Adjacency shows that economy best. A new star has to be compared against only
-four earlier positions: the cell immediately to its left and the three above it.
+Adjacency is where that economy shows best, and it was the first block I felt I
+understood. A new star has to be compared against only four earlier positions: the cell immediately to its left and the three above it.
 The other four neighbours arrive later and run the reciprocal check themselves.
 Masking at row edges kills the false neighbours that would otherwise wrap across
 line boundaries, which leaves the complete adjacency test in seven standard
@@ -178,12 +181,13 @@ accepts.
 
 ## Getting the answer out
 
-With the semantics settled, recovering the grid was a search problem. Unrolling
-122 cycles into CNF through the simulator's SAT backend produced 11,970 variables
-and 39,650 clauses, from which the solver returned the 121-bit, 22-star grid
-shown at the top. The unroll has to run one cycle past the grid: at 121 cycles
-the verdict has not landed yet, and the same query is correctly unsatisfiable.
-Simulating the gates then pinned the timing exactly.
+By this point I knew what the machine wanted, so getting the grid was a search
+problem. I unrolled 122 cycles into CNF through the simulator's SAT backend,
+11,970 variables and 39,650 clauses, and the solver came back with the 121-bit,
+22-star grid shown at the top. My first attempt at this query was unsatisfiable,
+which turned out to be the right answer to the wrong question: the unroll has to
+run one cycle past the grid, because at 121 cycles the verdict has not landed
+yet. Simulating the gates then pinned the timing exactly.
 
 ```text
 success right after last bit: 0
@@ -254,8 +258,10 @@ most carefully.
 ## Checking I hadn't fooled myself
 
 One accepted input is weak evidence for a recovered specification, especially
-when that same input guided the rebuild. So I built the Star Battle rules
-independently and compared the two predicates in both directions. Within a
+when that same input guided the rebuild, and I did not want the only thing
+standing behind this document to be a grid I had reverse-engineered towards. So I
+built the Star Battle rules independently and compared the two predicates in both
+directions. Within a
 122-cycle unroll with every input bit free, `chip accepts and specification
 rejects` is UNSAT, the reverse is also UNSAT, and the specification has exactly
 one satisfying grid.
@@ -288,11 +294,11 @@ gates in the output path; forcing it to each value in turn changes nothing, and
 the predicate proof stays UNSAT in both directions when it gets a fresh SAT
 variable every cycle. TOOLCHAIN.md records both in full.
 
-One oddity is worth keeping. An eight-bit total-star counter survives in the
+One oddity I keep coming back to. An eight-bit total-star counter survives in the
 design even though two stars in each of eleven valid rows already forces a total
-of 22. It is redundant and still load-bearing: flipping any one of its eight
-flops midway through the accepted run prevented `success` in 24 of 24
-injections. Even the unreachable high bit participates, because the final
+of 22. I took it for dead logic and was wrong: it is redundant and still
+load-bearing, and flipping any one of its eight flops midway through the accepted
+run prevented `success` in 24 of 24 injections. Even the unreachable high bit participates, because the final
 comparator tests the whole register against 22. Somebody wrote that comparison in
 the source, and synthesis could not prove it away.
 
@@ -307,12 +313,12 @@ how lopsided the library usage is, so the ordering assumption buys almost nothin
 over guessing, and it had already sent me looking for a bug in the cone analysis
 that was never there.
 
-Probing the net at each cell's output pin and matching it to the netlist instance
-driving that net is what actually places them, and it resolves 713 of the 728.
-The fifteen it cannot are all `clkbuf_4` buffers sitting on the clock, a net too
-widely shared to attribute back to any single instance.
+What actually works is probing the net at each cell's output pin and matching it
+to the netlist instance driving that net, and doing it that way places 713 of the
+728. The fifteen I cannot place are all `clkbuf_4` buffers sitting on the clock,
+a net too widely shared to attribute back to any single instance.
 
-Their physical clustering supplied a useful cross-check. The output-generator box
+I then used their physical clustering as a check I had not rigged myself. The output-generator box
 in the supplied hint contains 207 of the 208 cells assigned to that cone, all 12
 of its flip-flops, no flip-flop from another block, and no unshared cell from
 another block. Only `$296` sits well outside the box, and nothing straddles its
