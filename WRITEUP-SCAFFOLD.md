@@ -208,7 +208,7 @@ Word budgets are advisory; the sum is ~3,400.
 
 ### §L — The die, and using their hint as a test (≈260 w)
 
-- **One clause only:** linking netlist instances to placement by assuming instance order matched failed at 46 of 728, forcing the geometric probe at each output pin.
+- **One clause only:** linking netlist instances to placement by assuming instance order matched AGREES at only 46 of 728 (re-derived 2026-08-12; chance baseline is ~29 given the skewed library usage), i.e. it FAILS at 682 of 728. The earlier phrasing had the direction backwards and made the assumption sound nearly right. The geometric probe at each output pin is what actually places them, resolving 713 of 728; the 15 it cannot are all clkbuf_4 on the clock net.
 
 - **Claim to land:** every gate was assigned to a block by cone membership and placed by probing the net at its output pin; the blocks turn out to be tight physical clusters; and their hint image was held out and used as a **falsifiable test** of an independently derived floorplan, not as an input to it.
 - **Facts/numbers:** their hint image boxes an "output generator" region; **207 of 208** cells attributed to that block fall inside the box, **all 12 of its flops** do, and **no flop from any other block does**. Die 200 × 352.7 µm.
@@ -246,7 +246,7 @@ Word budgets are advisory; the sum is ~3,400.
 ### §O — What didn't close (≈250 w)
 
 - **STRUGGLE 4 of 5 (chosen).** Form: ceiling with a mechanism. k-induction would not converge across differently encoded state spaces; the quiescence route failed over unreachable states. Name both mechanisms.
-- **STRUGGLE 5 of 5 (chosen).** Form: documented revision. The single-source refactor broke the proof — `REGION_MAP` is a string, the old constant was a split list, slicing gave garbage regions and `proof.py` reported a counterexample. Caught only because every output was captured before the change. Include it as evidence the discipline works, not as an apology.
+- **STRUGGLE 5 of 5 (CUT 2026-08-12).** No artifact survives: `REGION_CELLS = REGION_MAP.split()` is byte-identical in 240a468 and 0a878f9, so git shows no trace of the break. It would be the only claim in the document resting on recollection alone, in a document whose thesis is that every claim carries its evidence grade. Four struggles is already above the sample median. Original note follows. Form: documented revision. The single-source refactor broke the proof — `REGION_MAP` is a string, the old constant was a split list, slicing gave garbage regions and `proof.py` reported a counterexample. Caught only because every output was captured before the change. Include it as evidence the discipline works, not as an apology.
 
 - **Claim to land:** the unbounded result is not in hand, and three other claims have stated ceilings — each with a mechanism, not an apology.
 - **Facts/numbers, each with its root cause:**
