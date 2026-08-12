@@ -1,28 +1,57 @@
-# ASIC Reverse-Engineering Puzzle
+# Reverse-engineering the Jane Street ASIC puzzle
 
-This repository provides the files for the Jane Street ASIC reverse-engineering puzzle! See the [blog post](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/) for more details.
+The chip is an 11 by 11 two-star Star Battle checker. It reads the grid one cell
+per clock, never stores it, accepts exactly one arrangement, and then emits
+`(* TWO STARS *)`.
 
-### Puzzle GDS
+![The recovered region map and the only accepted grid](figures/puzzle.svg)
 
-The puzzle GDS is in this repository, in the file named `puzzle.gds`. You can preview it using [KLayout](https://www.klayout.de/) or the [TinyTapeout Online GDS Viewer](https://gds-viewer.tinytapeout.com/).
+**[Read the writeup →](WRITEUP.md)** · [Toolchain and commands](TOOLCHAIN.md) ·
+[Jane Street's original puzzle README](PUZZLE.md)
 
-See `example_inputs.vcd` which shows some inputs being fed to the design (unfortunately, not the correct inputs to make `success` go high!). You can view it using [Surfer](https://surfer-project.org/) or a similar tool.
+## What I found
 
-To help you get started, below is an image with some hints. The region labelled as "output generator" is safe to ignore during your initial reverse-engineering steps, but you'll need to simulate it to get your final answer!
+- **A streaming checker, not a stored grid.** 121 bits enter the design and only
+  92 flip-flops exist, 12 of them in the output block. Each arriving bit bumps a
+  few saturating counters and slides into a 12-deep history line, which is
+  exactly enough to test adjacency against the four earlier neighbours.
+- **One accepted grid.** Unrolling 122 cycles into CNF and solving gives the
+  unique 22-star arrangement, confirmed independently by a Star Battle solver
+  that never sees the netlist.
+- **`success` is exactly the Star Battle predicate.** A bidirectional miter over
+  the full 121-bit input window is UNSAT in both directions, backed by 37,382
+  differential cases with no disagreement.
+- **The message is not stored as text.** The output block computes
+  `O = permute(LFSR) XOR mask(index)`. No plaintext exists anywhere on the die.
+- **Two hidden messages.** 36 placeholder cells below the array spell
+  `PER ARENAM AD ASTRA` in Morse, and the supplied `example_inputs.vcd` reads as
+  `The night sky awaits`.
 
-![](layout.png)
+![The accepted grid streaming through the recovered chip](figures/streaming.gif)
 
-### Warm-up Puzzle
+## Reproducing it
 
-To familiarize yourself with the flow and help develop your tools, we've put together a small example design and run it through a very similar flow to the one used for the real thing! The example design consists of two shift registers, an adder, and a comparator, outputting success if `A + B == 496`.
+Everything reruns from `puzzle.gds` alone.
 
-You'll find the following files related to the warm-up puzzle:
+```sh
+python3 -m venv .venv && .venv/bin/pip install klayout gdstk numpy python-sat pillow
+.venv/bin/python extract.py puzzle.gds puzzle_net.json   # layout to netlist
+.venv/bin/python solve.py                                # the accepted grid
+.venv/bin/python verify.py solution_bits.txt 20          # replay it, read O[7:0]
+```
 
-- `warmup/00_source.v`: The original Verilog source code of the example design
-- `warmup/01_netlist.v`: Synthesized netlist comprising of a list of standard cells
-  and connections
-- `warmup/02_netlist_with_power_rails.v`: Netlist with VDD and GND rails added
-- `warmup/03_post_place_and_route.def`: Physical layout of cells and routing
-  connections, corresponding to cell and net names.
-- `warmup/04_final.gds`: The final manufacturable layout file, with many internal names
-  removed
+[TOOLCHAIN.md](TOOLCHAIN.md) has the rest: the second extractor, the proofs, the
+Verilog and Hardcaml rebuilds, and the easter eggs.
+
+## Map of the repository
+
+| | |
+|---|---|
+| `recovered.py` | Every fact recovered from the layout, in one place. Run it to check the structure against itself. |
+| `extract.py`, `extract2.py` | Two independent layout-to-netlist extractors, sharing no code. |
+| `sim.py`, `cnf.py`, `cells.py` | Gate-level simulator with swappable bit-parallel and SAT backends. |
+| `solve.py`, `proof.py`, `diff_test.py` | Finding the grid, proving the predicate, and differential testing. |
+| `regions.py`, `place.py`, `blocks.py` | Recovering the region map and putting the blocks back on the die. |
+| `gen_rtl.py`, `gen_hardcaml.py`, `gen_liberty.py` | The rebuilds and the measured cell library. |
+| `gen_figures.py`, `gen_datapath.py`, `gen_animation.py` | Every figure in the writeup. |
+| `warmup/`, `pdk/`, `tinytapeout/` | Jane Street's warm-up design, the SkyWater cell models, and the Tiny Tapeout packaging. |

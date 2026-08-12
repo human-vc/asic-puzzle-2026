@@ -99,6 +99,27 @@ message.
 .venv/bin/python quiescence.py  # reset behaviour; fixed-point attempt
 ```
 
+### What did not close
+
+Bounded equivalence is the strongest claim the writeup makes, and these are the
+two reasons it stays bounded.
+
+k-induction did not converge. The extracted design and the rebuild encode the
+same state differently, one-hot in the row accumulator against binary in the
+tallies, so the induction step admits state pairs that agree on every output and
+disagree on the encoding. A fixed-point argument over "the stream has finished"
+fails for the same reason: an arbitrary finished state includes assignments no
+real run can reach. Under that unconstrained experiment nine flip-flops can still
+move, though neither success-latch flop is among them.
+
+One net, `$1447`, has no driver and feeds two gates in the output path. Icarus
+assigns unknown nets zero, so `diff_test.py` was rerun with the net forced to
+each value: zero disagreements and one accepted grid both ways. `proof.py` also
+stays UNSAT in both directions when `$1447` is given a fresh SAT variable every
+cycle, which covers an adversarial driver rather than a constant one. The net
+sits outside the `success` cone, so the uncertainty is confined to `O[1]` and
+`O[4]`.
+
 ## 6. Independent simulation
 
 ```sh
@@ -152,6 +173,12 @@ Recovers the Morse spelled by the placeholder cells below the cell array, and
 the text hidden in the stimulus of `example_inputs.vcd`.
 
 ## Figure pack
+
+```sh
+.venv/bin/python gen_figures.py      # puzzle, floorplan, morse
+.venv/bin/python gen_datapath.py     # block diagram, counts from blocks.json
+.venv/bin/python gen_animation.py    # the accepted grid streaming, as a GIF
+```
 
 ```sh
 .venv/bin/python export_trace.py

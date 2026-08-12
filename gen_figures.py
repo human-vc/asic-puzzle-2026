@@ -23,7 +23,7 @@ FONT = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
 
 ORDER = ["cell counter (mod 11)", "row counter", "input delay line", "adjacency check",
          "row accumulator", "column accumulators", "region accumulators",
-         "success latch", "output generator", "verdict/output shared"]
+         "total-star counter", "success latch", "output generator"]
 
 
 def floorplan(out="figures/floorplan.svg", cols=5, pw=104, gap=16):

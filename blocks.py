@@ -25,7 +25,7 @@ FLOP_BLOCKS = {
     # Feeds O only. This is the block the puzzle's own hint image boxes off.
     "output generator": rec.OUT_INDEX + rec.OUT_LFSR,
     # Feeds both the verdict and the output byte, and sits outside that box.
-    "verdict/output shared": [f for f, _w in rec.TOTAL_COUNTER],
+    "total-star counter": [f for f, _w in rec.TOTAL_COUNTER],
 }
 ORDER = list(FLOP_BLOCKS)
 
