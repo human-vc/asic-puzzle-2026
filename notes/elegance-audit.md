@@ -1,3 +1,8 @@
+> Code review from 2026-08-12, kept as written (it is critical of the code as
+> it then stood). Findings 1-5, 10-12, 15, 17 and 18 have since been applied;
+> findings 6, 7, 8, 9, 13, 14 and 16 have not. Line numbers refer to the
+> pre-fix files.
+
 ## Findings, ranked by clarity gained
 
 ### 1. `recovered.py`'s "one source of truth" claim is false in four files

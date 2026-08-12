@@ -9,7 +9,7 @@ Repo: `/Users/jacobcrainic/asic-puzzle-2026`. All numbers below are the verified
 - Two deliverables, different shapes. Google Form before **Sept 4 2026** wants "a brief description of how you did it" — that is ~200 words, not this document. This document is the **post-close publication** that gets emailed to `asic-puzzle@janestreet.com` for the follow-up post.
 - Publish nothing public before Sept 4 (their spoiler rule is verbatim and explicit).
 - Two artifacts, one repo: the **narrative writeup** (this scaffold) and the **repo as reference** (`TOOLCHAIN.md` already exists and is the "others can reference and learn from" axis). Do not merge them — the narrative must not become an install guide.
-- AI rule: writeup must be human-written. Scripts were fine to generate. Note under Risks (§6) how to handle this — the genre answer is *do not mention it at all*, but do include a ground-truth provenance sentence.
+- AI rule: writeup must be human-written; scripts were fine to generate. CORRECTED 2026-08-12: an earlier draft of this scaffold said the genre answer is to not mention AI at all. That is wrong. Jane Street's own reverse-engineering follow-up (`/can-you-reverse-engineer-our-neural-network/`) reports the featured solver asking ChatGPT for hash functions and having Gemini write an md5 implementation, and treats it as unremarkable. Auxiliary AI use is normally stated; the ban is narrow (do not feed puzzle files in, do not have it write prose). Mention tools factually in a tools list if at all.
 
 ---
 
@@ -26,6 +26,8 @@ Justification from the research:
 - Skarman (~550 words) and Saab (~330 words) prove short can win — but only on a single unimpeachable shown thing. We have eight or nine strong things; a 500-word note would waste them.
 - Both stated judging axes are reachable at this length: "detailed write-ups that others can reference and learn from" (the block ledger + TOOLCHAIN.md link) and "trickier solves that took the solution further in some dimension" (formal miter, Hardcaml rewrite, Tiny Tapeout, Morse decode — four dimensions, each ≤300 words).
 - Genre gap noted in the research: this is RE, not design, so the document must carry a thing none of the seven needed — **a confirmed/inferred confidence ledger**. Budget ~150 words of table for it and it replaces ~600 words of hedging prose.
+
+**Genre precedent (added 2026-08-12).** The seven Advent-of-FPGA submissions are DESIGN writeups. The only REVERSE-ENGINEERING writeup Jane Street has published is the neural-net follow-up at `/can-you-reverse-engineer-our-neural-network/` (Ricson Cheng, Feb 24 2026, 14 min). It is narrative nonfiction about one named solver in which dead ends carry equal weight to breakthroughs — an ILP solver that "churned without terminating", a SAT attempt stuck at 20,000 variables, "after many days, he had to take a step back, effectively having gotten nowhere", two days spent on a bug that led nowhere. It also treats meta-reasoning about the puzzle as a designed object as legitimate technique ("this has to be a solvable puzzle, right? How would someone build a puzzle like this..."). For this document that means: the cycle-124 counterexample, the placeholder cells dismissed as inert, and the k-induction that would not converge belong INSIDE the narrative as plot, not in a closing apology.
 
 Register targets (from the cross-cutting findings): first-person singular; exact numbers, scarce adjectives; wit only in asides; zero throat-clearing about why the project matters; limitations at point of first claim, never in a closing apology; praise/credentials at the bottom if at all.
 
@@ -64,7 +66,7 @@ Word budgets are advisory; the sum is ~3,400.
 
 - **Heading:** "Reproduce" or similar.
 - **Claim to land:** everything below is re-derivable from `puzzle.gds` alone, and here is the exact entry point.
-- **Facts:** link `TOOLCHAIN.md`; the venv + `klayout gdstk numpy python-sat` line; `icarus-verilog`, `yosys`; note the Hardcaml path needs opam. State the honest friction the reader will hit (Skarman's credibility device): which steps are slow, that `netlist_check.py` prints `RESULT: PROBLEMS FOUND` by design of what it checks (forward-reference to §L), that the PDK must be fetched via `tools/fetch_pdk.sh`.
+- **Facts:** link `TOOLCHAIN.md`; the venv + `klayout gdstk numpy python-sat` line; `icarus-verilog`, `yosys`; note the Hardcaml path needs opam. State the honest friction the reader will hit (Skarman's credibility device): which steps are slow, that `netlist_check.py` reports the one known floating net (`known floating nets: ['$1447']`, `unexpected problems: 0`) — forward-reference to §L, that the PDK must be fetched via `tools/fetch_pdk.sh`.
 - **Figure:** none.
 - **Must NOT:** become an install tutorial. Three commands maximum in-line, everything else behind the link.
 
@@ -77,15 +79,15 @@ Word budgets are advisory; the sum is ~3,400.
 - **Facts/numbers:** 728 logic cells + 890 inert (fill/tap/decap — one clause, not a paragraph); the control experiment: same command on `warmup/04_final.gds` reproduces the shipped ground-truth netlist's cell histogram exactly.
 - **Figure:** optional — a cropped `layout.png` region *only if* it shows a labelled pin; otherwise none.
 - **JS quote to engage:** "nothing is labeled!" — the honest reply is that in this GDS the *cells* were labelled; what is unlabelled is the **meaning**, and that is where the rest of the document goes. This is the single best quote-engagement in the piece; spend one sentence on it and move.
-- **Must NOT:** manufacture difficulty, and equally must not sneer at the puzzle for it. Anti-heroic register (Gajdusek: "There is no heroic tale of debugging…").
+- **Must NOT:** manufacture difficulty, and equally must not sneer at the puzzle for it. Understate *this* step specifically. Note the genre split: Gajdusek ("There is no heroic tale of debugging…") is a DESIGN writeup; the only reverse-engineering precedent Jane Street has published is the neural-net follow-up, which foregrounds dead ends and gives them equal weight to breakthroughs. Understatement belongs here because extraction really was easy — it is not the register for the document as a whole.
 
 ---
 
 ### §E — Two extractions, one partition; and 66 cell models checked (≈300 w)
 
 - **Claim to land:** the netlist is not a single tool's opinion — two code-disjoint extractors agree exactly, and every cell's behaviour was checked against the PDK rather than assumed.
-- **Facts/numbers:** `extract.py` (KLayout connectivity engine) vs `extract2.py` (gdstk + exact polygon booleans + own union-find); **5,095 pin sites found, 5,094 resolved and probed in both, 0 unresolved; 741 nets each; `PARTITIONS ARE IDENTICAL`**. 66 cell models: 63 combinational verified over **every** input vector, 3 sequential.
-- **Raw output to paste:** the `compare_extractions.py` tail (`mine=741 klayout=741`, `PARTITIONS ARE IDENTICAL`) and one line of `check_cells.py`. Paste, do not paraphrase — the machine's voice is the proof.
+- **Facts/numbers:** `extract.py` (KLayout connectivity engine) vs `extract2.py` (gdstk + exact polygon booleans + own union-find); **5,095 pin sites found, 5,094 resolved and probed in both, 0 unresolved; 741 nets each; `partitions identical: yes`**. 66 cell models: 63 combinational verified over **every** input vector, 3 sequential.
+- **Raw output to paste:** the `compare_extractions.py` tail (`mine=741  klayout=741`, `partitions identical: yes`) and one line of `check_cells.py`. Paste, do not paraphrase — the machine's voice is the proof.
 - **Figure:** none.
 - **JS quote:** optionally Minsky's "agents benefit a ton from universal guarantees, the ∀" — but better saved for §I. Skip here.
 - **Must NOT:** describe how union-find works. Point at the file.
@@ -193,7 +195,7 @@ Word budgets are advisory; the sum is ~3,400.
 - **Facts/numbers, each with its root cause:**
   - **k-induction did not converge** across differently encoded state spaces (one-hot region tally vs binary row tally). The equivalence is therefore **bounded** at the unroll depths in §I/§M, not unbounded.
   - **Fixed-point / quiescence argument failed over unreachable states** (`quiescence.py`).
-  - **`$1447`**: one net with no driver, fanning out to `$279` `a31oi_2` pin A1 and `$1781` `a311o_2` pin A1. `netlist_check.py` prints `RESULT: PROBLEMS FOUND` solely on this. State the resolution as experiments: differential test re-run with the net **forced to each value** → 0 disagreements, 1 accepted grid both ways; `proof.py` re-run with `$1447` as a **free SAT variable** → still UNSAT both directions. Also disclose that `sim.py` defaults unknown nets to zero, i.e. the default runs implicitly assumed `$1447 = 0` — that admission is what makes the forced-both-ways experiment meaningful.
+  - **`$1447`**: one net with no driver, fanning out to `$279` `a31oi_2` pin A1 and `$1781` `a311o_2` pin A1. `netlist_check.py` names it as the one known floating net and reports `unexpected problems: 0`; before 2026-08-12 it printed `RESULT: PROBLEMS FOUND` solely on this. State the resolution as experiments: differential test re-run with the net **forced to each value** → 0 disagreements, 1 accepted grid both ways; `proof.py` now gives `$1447` a **free SAT variable every cycle** → still UNSAT both directions. Be precise about what that does and does not add: `$1447` is not in `success`'s cone at all (only `O[1]` and `O[4]` see it), so the proof never depended on its value; the free variable removes the reliance on `sim.py`'s zero-default rather than strengthening the result. Also disclose that `sim.py` defaults unknown nets to zero, i.e. the default runs implicitly assumed `$1447 = 0` — that admission is what makes the forced-both-ways experiment meaningful.
   - **Tiny Tapeout 43%** is an area estimate.
   - **Extraction was easy** — restated once, in the limitations ledger, so it can't be read as buried.
 - **Also worth one line:** the 22-star total counter is logically redundant given the two-per-row constraints, yet load-bearing in the silicon — corrupt it mid-run and `success` dies. Give the precise sense of "redundant" (implied by other constraints on reachable inputs) so it doesn't read as a contradiction.
@@ -267,7 +269,7 @@ Anchoring these: **the extraction was easy and the document says so in §D.** Th
 | "The reconstruction is equivalent to the silicon" | Same bound. Plus: equivalence is against the **extracted** netlist, which is itself a recovered artifact (§E is what backs it). Two links in the chain, both stated. |
 | "k-induction didn't converge" glossed over | Must say *why*: differently encoded state spaces (one-hot vs binary tallies), and that the quiescence/fixed-point route failed over unreachable states. A ceiling with a mechanism is a finding; a ceiling without one is a hedge. |
 | "The floating net doesn't matter" | Must be stated as the two experiments, not as a judgement: forced to each value → 0 disagreements both ways; free SAT variable → UNSAT both directions. And must disclose that `sim.py` silently defaults unknown nets to zero, so the default runs assumed `$1447 = 0`. |
-| Suppressing `netlist_check.py`'s `PROBLEMS FOUND` | Disclose it, in §C and §O, with the exact trigger (`undriven = ['$1447']`, sole cause) and the fact that it is pre-existing at clean commit `76d0fd9`, not a regression. Hiding a script that prints a failure is the one thing that would sink the document if a reader ran the repo. |
+| Glossing the floating net `$1447` | Disclose it in §C and §O with the exact trigger (`undriven = ['$1447']`, sole cause). The script now names it and reports `unexpected problems: 0`; say that the verdict was changed deliberately and why, not that the anomaly went away. |
 | "728 driven nets / 719 / 741" confusion | 741 is nets touching pins (both extractors); 719 is `netlist_check.py`'s narrower count of nets with a driving output pin, excluding the four input ports and power rails. Different metrics, both correct. Pick 741 for the headline and footnote the other if it appears at all. |
 | "Fits in a Tiny Tapeout tile" | Area **estimate** from a Liberty with measured areas — not an OpenLane place-and-route result. The word "estimate" in the same sentence as "43%". |
 | "We used their hint as a test, not an input" | Only true if the hint image was genuinely not consulted while deriving the floorplan. If it was seen first, the honest version is that the correspondence was *quantified* (203/208, 12/12, 0 foreign flops) rather than that it was held out. The number survives; the epistemic framing must match what actually happened. |

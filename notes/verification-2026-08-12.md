@@ -1,3 +1,10 @@
+> Record of an independent re-run on 2026-08-12, kept as observed.
+> SINCE CHANGED: `netlist_check.py` row 2 reports FAIL because the script's
+> verdict flipped on the known floating net `$1447`. The script was
+> subsequently changed to name that net and report `unexpected problems: 0`,
+> and several scripts had banner output removed, so exact strings below may
+> not match current output. The numbers are unchanged.
+
 | # | Check | Status | Key observation |
 |---|-------|--------|-----------------|
 | 1 | `recovered.py` | PASS | `OK`; 13 flop groups covering 92/92 flops, no duplicates/unaccounted; **11 regions summing to 121**; message `'(* TWO STARS *)'` (15 bytes) |
