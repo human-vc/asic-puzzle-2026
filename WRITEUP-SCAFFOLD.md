@@ -9,7 +9,7 @@ Repo: `/Users/jacobcrainic/asic-puzzle-2026`. All numbers below are the verified
 - Two deliverables, different shapes. Google Form before **Sept 4 2026** wants "a brief description of how you did it" — that is ~200 words, not this document. This document is the **post-close publication** that gets emailed to `asic-puzzle@janestreet.com` for the follow-up post.
 - Publish nothing public before Sept 4 (their spoiler rule is verbatim and explicit).
 - Two artifacts, one repo: the **narrative writeup** (this scaffold) and the **repo as reference** (`TOOLCHAIN.md` already exists and is the "others can reference and learn from" axis). Do not merge them — the narrative must not become an install guide.
-- AI rule: writeup must be human-written; scripts were fine to generate. CORRECTED 2026-08-12: an earlier draft of this scaffold said the genre answer is to not mention AI at all. That is wrong. Jane Street's own reverse-engineering follow-up (`/can-you-reverse-engineer-our-neural-network/`) reports the featured solver asking ChatGPT for hash functions and having Gemini write an md5 implementation, and treats it as unremarkable. Auxiliary AI use is normally stated; the ban is narrow (do not feed puzzle files in, do not have it write prose). Mention tools factually in a tools list if at all.
+- AI rule: the writeup must be human-written; scripts and code were explicitly permitted. DECISION: say nothing about tooling. Measured norm across the nine published artifacts: 0 of 7 featured FPGA writeups mention AI at all, and Jane Street's own engineers ship AI-built features without any stated disclosure norm. Silence is the convention. The one thing not to do is Pearson's move of affirmatively claiming 'These solutions are all my work' — make no authorship assertion either way.
 
 ---
 
@@ -26,6 +26,16 @@ Justification from the research:
 - Skarman (~550 words) and Saab (~330 words) prove short can win — but only on a single unimpeachable shown thing. We have eight or nine strong things; a 500-word note would waste them.
 - Both stated judging axes are reachable at this length: "detailed write-ups that others can reference and learn from" (the block ledger + TOOLCHAIN.md link) and "trickier solves that took the solution further in some dimension" (formal miter, Hardcaml rewrite, Tiny Tapeout, Morse decode — four dimensions, each ≤300 words).
 - Genre gap noted in the research: this is RE, not design, so the document must carry a thing none of the seven needed — **a confirmed/inferred confidence ledger**. Budget ~150 words of table for it and it replaces ~600 words of hedging prose.
+
+**How the field handles problems (measured 2026-08-12, all nine artifacts read).** 5 of 9 document real dead ends; 3 of 9 state limitations only; 1 of 9 (Gajdusek, their favourite) has none and says so outright. So documenting failure is the majority behaviour, not a risk. Observed forms, any of which is idiomatic:
+- narrative dead end — Citerin ("I misread the instructions... I wasted a lot of time trying to adapt the Simplex algorithm"), Cacqueray, and the NN follow-up
+- per-unit table column — Michon ("Sim/syn mismatch", "Large rework after noticing I'd run out of RAM blocks")
+- retrospective aside — Jhaveri ("In retrospect, this design is okay, however...")
+- bounded-correctness admission — Jhaveri ("cannot guarantee correct results for **all** inputs")
+- documented revision with before/after numbers — Jhaveri (bitonic sort to heapsort, 3.35M to 1.74M cycles)
+- resource/scope limit stated up front — Skarman (64 GB RAM), Pearson ("a lot more polish... could be done")
+
+Placement rule with no exceptions in the sample: limitations sit at the point of the claim they qualify. Not one of the nine has a closing "Limitations" section.
 
 **Genre precedent (added 2026-08-12).** The seven Advent-of-FPGA submissions are DESIGN writeups. The only REVERSE-ENGINEERING writeup Jane Street has published is the neural-net follow-up at `/can-you-reverse-engineer-our-neural-network/` (Ricson Cheng, Feb 24 2026, 14 min). It is narrative nonfiction about one named solver in which dead ends carry equal weight to breakthroughs — an ILP solver that "churned without terminating", a SAT attempt stuck at 20,000 variables, "after many days, he had to take a step back, effectively having gotten nowhere", two days spent on a bug that led nowhere. It also treats meta-reasoning about the puzzle as a designed object as legitimate technique ("this has to be a solvable puzzle, right? How would someone build a puzzle like this..."). For this document that means: the cycle-124 counterexample, the placeholder cells dismissed as inert, and the k-induction that would not converge belong INSIDE the narrative as plot, not in a closing apology.
 
@@ -111,6 +121,8 @@ Word budgets are advisory; the sum is ~3,400.
 
 ### §G — The region map, by one-hot probing (≈190 w)
 
+- **One clause only:** the accumulator weights were measured after a wrong first guess, which is what makes the ledger say *confirmed by experiment* rather than *inferred*.
+
 - **Claim to land:** the hard-wired region map was not read off the layout by eye; it was measured, by feeding a single star at each of the 121 cells and recording which accumulator moved.
 - **Facts/numbers:** 121 probes → 11 regions summing to 121; 4-connected contiguity **True**; independent Star Battle solver finds **exactly 1** solution (search capped at 5) and it **matches the grid the chip accepts**.
 - **Figure:** `figures/puzzle.svg` if not already spent in §A — otherwise reference back. Prefer spending it here if §A uses a die photo instead.
@@ -138,6 +150,8 @@ Word budgets are advisory; the sum is ~3,400.
 
 ### §J — The miter that failed at cycle 124 (≈340 w — set-piece #1)
 
+- **STRUGGLE 1 of 5 (chosen).** Form: narrative dead end. The RTL asserted the verdict immediately; the silicon registers it one cycle later. Every simulation against the known-good stream had passed. The counterexample the miter returned was the puzzle's own solution grid.
+
 - **Heading:** should not be cute. Name the cycle.
 - **Claim to land:** every simulation against the known-good stimulus passed, and the reconstruction was still wrong; the miter found it at exactly cycle 124 and handed back the puzzle's own solution grid as the counterexample.
 - **Facts/numbers:** silicon registers the verdict **one cycle after** the last bit; the RTL asserted it combinationally. The counterexample was the solution grid — i.e. the one stimulus that had been tested most. Tie to their own puzzle instruction: "Don't forget to toggle `rst_n` before each input attempt" — the same one-cycle protocol subtlety, from the other side.
@@ -149,6 +163,8 @@ Word budgets are advisory; the sum is ~3,400.
 
 ### §K — The output generator: the message is not in the layout (≈340 w — set-piece #2)
 
+- **STRUGGLE 2 of 5 (chosen).** Form: failed assumption. The first attempt assumed the bytes were sitting in the gates. They are not, and the masks `4d ad fb 83…` are what proves it. The wrong assumption is what makes the finding land.
+
 - **Claim to land:** `O = permute(LFSR) XOR mask(index)`; the mask bytes sitting in the gates are `4d ad fb 83 13 79 1c b5 79 63 c7 68 93 f5` — not text — and the plaintext exists only once the LFSR runs from its reset seed.
 - **Facts/numbers:** 4-bit saturating index counter built from the 4 un-reset `dfxtp` flops (say why un-reset matters); 8-bit LFSR; verification that the decode is right, not just consistent: **single-bit flips are XOR-linear at every index**, and **randomising either the LFSR or the index destroys the message**. 208 cells in this block, 12 flops.
 - **JS quotes to engage (this section has two earned ones):** "There is one section of the design that is used to generate the output but does not affect the success output. You can safely ignore it…" — we didn't; and "You'll need to come up with a way to simulate the underlying circuit to test your solution and get the final output!" — this section explains *why* that instruction had to be there. That mechanism-level explanation of the puzzle-setter's own constraint is the highest-value paragraph in the document for a judge reading it.
@@ -157,6 +173,8 @@ Word budgets are advisory; the sum is ~3,400.
 ---
 
 ### §L — The die, and using their hint as a test (≈260 w)
+
+- **One clause only:** linking netlist instances to placement by assuming instance order matched failed at 46 of 728, forcing the geometric probe at each output pin.
 
 - **Claim to land:** every gate was assigned to a block by cone membership and placed by probing the net at its output pin; the blocks turn out to be tight physical clusters; and their hint image was held out and used as a **falsifiable test** of an independently derived floorplan, not as an input to it.
 - **Facts/numbers:** their hint image boxes an "output generator" region; **203 of 208** cells attributed to that block fall inside the box, **all 12 of its flops** do, and **no flop from any other block does**. Die 200 × 352.7 µm.
@@ -180,6 +198,8 @@ Word budgets are advisory; the sum is ~3,400.
 
 ### §N — Easter eggs (≈220 w)
 
+- **STRUGGLE 3 of 5 (chosen).** Form: narrative dead end, and the document's ending. `INTERNAL_3`/`INTERNAL_7` were written off as electrically irrelevant early on. They were the Morse.
+
 - **Claim to land:** two hidden messages, both recovered, and one of them was found by re-examining cells previously dismissed as electrically irrelevant.
 - **Facts/numbers:** **36 placeholder cells** (`INTERNAL_3` / `INTERNAL_7`, two widths) in one row **below** the cell array spelling **`PER ARENAM AD ASTRA`** in Morse — through the sand to the stars. Their own `example_inputs.vcd` encodes **`The night sky awaits`** as 7-bit ASCII, one character per grid row, LSB in column 0 (report the two trailing spaces as observed — it's the kind of exactness the genre rewards). `$version` = "Leave no stone unturned!"; `$date` is a real leap second.
 - **The honest beat:** those 36 cells had been dismissed earlier as electrically irrelevant. Say so — it converts a flex into a debugging-honesty datum, which is the axis they explicitly praised.
@@ -190,6 +210,9 @@ Word budgets are advisory; the sum is ~3,400.
 ---
 
 ### §O — What didn't close (≈250 w)
+
+- **STRUGGLE 4 of 5 (chosen).** Form: ceiling with a mechanism. k-induction would not converge across differently encoded state spaces; the quiescence route failed over unreachable states. Name both mechanisms.
+- **STRUGGLE 5 of 5 (chosen).** Form: documented revision. The single-source refactor broke the proof — `REGION_MAP` is a string, the old constant was a split list, slicing gave garbage regions and `proof.py` reported a counterexample. Caught only because every output was captured before the change. Include it as evidence the discipline works, not as an apology.
 
 - **Claim to land:** the unbounded result is not in hand, and three other claims have stated ceilings — each with a mechanism, not an apology.
 - **Facts/numbers, each with its root cause:**
@@ -225,6 +248,9 @@ Word budgets are advisory; the sum is ~3,400.
 ---
 
 ## 4. Cut or compress
+
+**Struggles deliberately cut (2026-08-12).** Their dead ends are always *an approach that failed*, never *a tool that would not install*. By that filter, cut: the Homebrew lock that silently no-op'd an install, `cell` being a reserved word in SystemVerilog, a stray apostrophe in a generated literal, yosys needing `memory_map`, and the two accumulator calibration off-by-ones. Also cut the repo self-audit findings — post-hoc housekeeping, not part of the solve.
+
 
 | Cut / compress | Reason |
 |---|---|
