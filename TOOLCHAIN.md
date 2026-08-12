@@ -121,6 +121,7 @@ yosys equiv.ys                    # bounded miter, 145 cycles under the protocol
 yosys -q synth.ys                 # re-synthesize onto that cell set
 .venv/bin/python roundtrip.py     # compare against the real die
 .venv/bin/python cycle124.py      # reproduce the verdict-timing bug, by depth
+.venv/bin/python cycle124.py forced   # 121 miters; slow, JOBS=3 by default
 ```
 
 Hardcaml version:
