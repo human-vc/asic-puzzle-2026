@@ -16,14 +16,16 @@ def run(path, bits, cycles=None, enable=1, show=None, hold_reset=2):
 
     rows = []
     for _ in range(hold_reset):
-        d.cycle(be, st, {"rst_n": 0, "enable": 0, "I": 0})
+        d.cycle(be, st, {"rst_n": be.zero, "enable": be.zero, "I": be.zero})
     n = cycles if cycles is not None else len(bits)
     for c in range(n):
         i = bits[c] if c < len(bits) else 0
-        v = d.eval_at(be, st, {"rst_n": 1, "enable": enable, "I": i, "clk": 0})
+        v = d.eval_at(be, st, {"rst_n": be.one, "enable": (be.one if enable else be.zero),
+                          "I": (be.one if i else be.zero), "clk": be.zero})
         rows.append((c, i, snap(st), v.get("net:success", 0) & 1,
                      sum(((v.get("net:O[%d]" % k, 0) & 1) << k) for k in range(8))))
-        d.cycle(be, st, {"rst_n": 1, "enable": enable, "I": i})
+        d.cycle(be, st, {"rst_n": be.one, "enable": (be.one if enable else be.zero),
+                            "I": (be.one if i else be.zero)})
     return d, fname, order, rows
 
 

@@ -6,7 +6,7 @@ the layout, so nothing is hand-transcribed.
 from recovered import REGION_CELLS as REGIONS
 
 N = 11
-STRING = "(* TWO STARS *)"
+from recovered import MESSAGE as STRING
 
 
 def main(out="puzzle_rtl.v"):

@@ -1,18 +1,23 @@
-"""Show the chip reaches a fixed point, which upgrades the bounded equivalence
-proof to a complete one.
+"""Two experiments about what the chip does once it has finished.
 
-The machine freezes: once the run flag is set and the output index has
-saturated, no input other than reset can change any flip-flop. So the number of
-distinct state transitions after reset is bounded, and verifying past that point
-covers all reachable behaviour rather than merely a window of it.
+The hope was that the machine reaches a fixed point, which would upgrade the
+bounded equivalence proof to a complete one. It does not, and this script is
+the evidence: quantifying over ARBITRARY states that satisfy done and
+index-saturated -- unreachable ones included -- five flops can still move, so
+the argument does not close. Reachability invariants would be needed.
+
+What it does establish: asserting reset restores the reset state for every flop
+that has one, from any state and under any input.
 """
 from pysat.solvers import Cadical153
 
 from cnf import CnfBackend
 from sim import Design
 
-DONE = 7                      # run/done flag
-IDX = [0, 1, 2, 91]           # output index counter (saturates at 15)
+from recovered import RUN_FLAG, OUT_INDEX
+
+DONE = RUN_FLAG[0]
+IDX = OUT_INDEX
 
 
 def main():
@@ -20,7 +25,8 @@ def main():
     be = CnfBackend()
     order = [f[1] for f in d.flops]
 
-    # an arbitrary state, constrained only to "finished and done emitting"
+    # "finished and done emitting", but otherwise unconstrained: this includes
+    # states the design can never reach, which is why the answer below is YES
     state = {q: be.new() for q in order}
     assume = [state[order[DONE]]] + [state[order[f]] for f in IDX]
 

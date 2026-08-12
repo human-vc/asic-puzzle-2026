@@ -95,15 +95,17 @@ def main():
     print("\nEquivalence holds => the chip is exactly an 11x11 two-star Star Battle")
     print("checker on the recovered regions, for all 2^121 input streams.")
 
+    MAX_MODELS = 3
     s = Cadical153(bootstrap_with=be.clauses)
     s.add_clause([spec])
     n = 0
-    while s.solve() and n < 3:
+    while s.solve() and n < MAX_MODELS:
         model = set(l for l in s.get_model() if l > 0)
         bits = [1 if v in model else 0 for v in ivars[:N * N]]
         n += 1
         s.add_clause([-v if b else v for v, b in zip(ivars[:N * N], bits)])
-    print("satisfying grids for the spec: %d (so the accepted input is unique)" % n)
+    print("satisfying grids for the spec: %d%s"
+          % (n, " (unique)" if n == 1 else " (search capped at %d)" % MAX_MODELS))
 
 
 if __name__ == "__main__":

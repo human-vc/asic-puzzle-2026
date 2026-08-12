@@ -1,26 +1,31 @@
 """Assign every gate to a recovered functional block, and report where each
 block physically sits on the die."""
+import collections
 import json
 
 from analyze import cone
 from sim import Design
+import recovered as rec
 
+def _flat(pairs):
+    return [f for pair in pairs for f in pair]
+
+# Derived from recovered.py so recovered.check()'s partition invariant covers
+# these groups too. Panels merge a few of its groups where the die does.
 FLOP_BLOCKS = {
-    "cell counter (mod 11)": [38, 45, 73, 84],
-    "row counter": [9, 14, 58, 64],
-    "run/done flag": [7, 61],
-    "input delay line": [13, 20, 71, 46, 29, 52, 15, 50, 8, 65, 74, 62],
-    "adjacency check": [28],
-    "column accumulators": [11, 24, 18, 30, 27, 80, 31, 72, 33, 76, 36, 42,
-                            37, 59, 39, 67, 40, 57, 43, 78, 79, 85],
-    "row accumulator": [68, 88, 81],
-    "region accumulators": [6, 55, 10, 25, 17, 47, 19, 82, 23, 87, 26, 70,
-                            32, 63, 41, 66, 48, 53, 49, 75, 56, 69],
-    "success latch": [35, 60],
+    "cell counter (mod 11)": rec.CELL_COUNTER,
+    "row counter": rec.ROW_COUNTER,
+    "run/done flag": rec.RUN_FLAG + rec.TOGGLE,
+    "input delay line": rec.DELAY_LINE,
+    "adjacency check": rec.ADJACENCY,
+    "column accumulators": _flat(rec.COLUMN_ACCUM),
+    "row accumulator": rec.ROW_ACCUM,
+    "region accumulators": _flat(rec.REGION_ACCUM),
+    "success latch": rec.SUCCESS,
     # Feeds O only. This is the block the puzzle's own hint image boxes off.
-    "output generator": [0, 1, 2, 3, 4, 5, 21, 22, 44, 77, 90, 91],
+    "output generator": rec.OUT_INDEX + rec.OUT_LFSR,
     # Feeds both the verdict and the output byte, and sits outside that box.
-    "verdict/output shared": [12, 16, 83, 86, 89, 34, 51, 54],
+    "verdict/output shared": [f for f, _w in rec.TOTAL_COUNTER],
 }
 ORDER = list(FLOP_BLOCKS)
 
@@ -95,7 +100,6 @@ def main():
         rows.append(dict(info, block=b, name=name))
     json.dump({"die": place["die"], "cells": rows}, open("blocks.json", "w"))
 
-    import collections
     stat = collections.defaultdict(lambda: [0, 1e9, -1e9, 1e9, -1e9])
     for r in rows:
         s = stat[r["block"]]

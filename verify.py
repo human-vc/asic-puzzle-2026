@@ -12,24 +12,24 @@ def main():
     be = BitBackend(1)
     st = d.new_state(be)
     for _ in range(2):
-        d.cycle(be, st, {"rst_n": 0, "enable": 0, "I": 0})
+        d.cycle(be, st, {"rst_n": be.zero, "enable": be.zero, "I": be.zero})
 
     for b in bits:
-        d.cycle(be, st, {"rst_n": 1, "enable": 1, "I": b})
-    v = d.eval_at(be, st, {"rst_n": 1, "enable": 1, "I": 0, "clk": 0})
+        d.cycle(be, st, {"rst_n": be.one, "enable": be.one, "I": (be.one if b else be.zero)})
+    v = d.eval_at(be, st, {"rst_n": be.one, "enable": be.one, "I": be.zero, "clk": be.zero})
     print("success right after last bit: %d" % (v["net:success"] & 1))
 
-    d.cycle(be, st, {"rst_n": 1, "enable": 1, "I": 0})
-    v = d.eval_at(be, st, {"rst_n": 1, "enable": 1, "I": 0, "clk": 0})
+    d.cycle(be, st, {"rst_n": be.one, "enable": be.one, "I": be.zero})
+    v = d.eval_at(be, st, {"rst_n": be.one, "enable": be.one, "I": be.zero, "clk": be.zero})
     print("success one cycle later:      %d" % (v["net:success"] & 1))
 
     print("\nO[7:0] for the next %d cycles:" % TAIL)
     out = []
     for k in range(TAIL):
-        v = d.eval_at(be, st, {"rst_n": 1, "enable": 1, "I": 0, "clk": 0})
+        v = d.eval_at(be, st, {"rst_n": be.one, "enable": be.one, "I": be.zero, "clk": be.zero})
         o = sum(((v["net:O[%d]" % i] & 1) << i) for i in range(8))
         out.append(o)
-        d.cycle(be, st, {"rst_n": 1, "enable": 1, "I": 0})
+        d.cycle(be, st, {"rst_n": be.one, "enable": be.one, "I": be.zero})
     print("hex:", " ".join("%02x" % o for o in out))
     print("asc:", "".join(chr(o) if 32 <= o < 127 else "." for o in out))
 

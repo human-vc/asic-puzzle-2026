@@ -146,6 +146,8 @@ class Design:
         return values
 
     def base_values(self, be, state, inputs):
+        """inputs must already be backend words (be.one / be.zero / packed lanes),
+        not Python 0/1 -- at width > 1 a bare 1 would drive lane 0 only"""
         v = dict(self.const_nodes)
         v = {k: (be.one if val else be.zero) for k, val in v.items()}
         v.update(state)

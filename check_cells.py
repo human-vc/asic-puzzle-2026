@@ -1,9 +1,12 @@
 """Exhaustively check the synthesizable cell models against the SkyWater
 functional models: every input vector for each combinational cell, and a
 directed clock/reset/set sequence for the flip-flops."""
+import glob
 import json
+import os
 import re
 import subprocess
+import tempfile
 
 import cells as cells_mod
 
@@ -17,13 +20,14 @@ SEQ_SEQUENCE = [
 
 
 def main():
+    tmp = tempfile.mkdtemp(prefix="cellcheck-")
     lib = cells_mod.load_cells("pdk/functional")
     data = json.load(open("puzzle_net.json"))
     used = sorted({i["cell"] for i in data["instances"] if i["cell"].startswith("sky130")})
 
     src = open("cells_behav.v").read()
     src = re.sub(r"\bmodule sky130", "module chk_sky130", src)
-    open("/private/tmp/claude-501/-Users-jacobcrainic/6e326e8e-b652-4122-bdd7-c9edfdf33ec0/scratchpad/check_models.v", "w").write(src)
+    open(os.path.join(tmp, "check_models.v"), "w").write(src)
 
     body, decls, ncomb, nseq = [], [], 0, 0
     for full in used:
@@ -77,15 +81,15 @@ def main():
           + "\n    $display(\"combinational cells: %0d   sequential cells: %0d\", "
           + "%d, %d);\n" % (ncomb, nseq)
           + "    $display(\"TOTAL MISMATCHES: %0d\", errors);\n    $finish;\n  end\nendmodule\n")
-    tbpath = "/private/tmp/claude-501/-Users-jacobcrainic/6e326e8e-b652-4122-bdd7-c9edfdf33ec0/scratchpad/tb_cells.v"
+    tbpath = os.path.join(tmp, "tb_cells.v")
     open(tbpath, "w").write(tb)
 
     incs = ["-Ipdk/verilog"] + ["-I" + d for d in
-                                sorted(__import__("glob").glob("pdk/verilog/cells/*/"))]
-    out = "/private/tmp/claude-501/-Users-jacobcrainic/6e326e8e-b652-4122-bdd7-c9edfdf33ec0/scratchpad/cells.vvp"
+                                sorted(glob.glob("pdk/verilog/cells/*/"))]
+    out = os.path.join(tmp, "cells.vvp")
     cmd = ["iverilog", "-g2012", "-DFUNCTIONAL"] + incs + [
         "-o", out, "pdk/verilog/sky130_cells.v",
-        "/private/tmp/claude-501/-Users-jacobcrainic/6e326e8e-b652-4122-bdd7-c9edfdf33ec0/scratchpad/check_models.v", tbpath]
+        os.path.join(tmp, "check_models.v"), tbpath]
     r = subprocess.run(cmd, capture_output=True, text=True)
     errs = [l for l in r.stderr.splitlines() if "UNIT_DELAY" not in l]
     if errs:

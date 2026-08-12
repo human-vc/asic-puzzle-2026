@@ -10,8 +10,7 @@ from sim import Design, BitBackend
 from recovered import REGION_CELLS as REGIONS
 
 from recovered import (REGION_ACCUM as REGION_GROUPS, COLUMN_ACCUM as COLUMN_GROUPS,
-                       ROW_ACCUM as ROW_GROUP, CELL_COUNTER as COL_CTR,
-                       ROW_COUNTER as ROW_CTR)
+                       ROW_ACCUM as ROW_GROUP, CELL_COUNTER, ROW_COUNTER)
 
 N = 11
 
@@ -133,8 +132,8 @@ def main():
         for i, g in enumerate(COLUMN_GROUPS):
             cols[colmap[i]] = decode_group(col_tables[i], state, order, g)
         frames.append({
-            "cell": num(state, COL_CTR),
-            "row": num(state, ROW_CTR),
+            "cell": num(state, CELL_COUNTER),
+            "row": num(state, ROW_COUNTER),
             "regions": regs,
             "columns": cols,
             "rowacc": decode_group(row_table, state, order, ROW_GROUP),

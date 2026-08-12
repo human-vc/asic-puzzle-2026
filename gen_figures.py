@@ -6,6 +6,8 @@ the die. Plain SVG so they stay crisp and diff-able.
 """
 import collections
 import json
+import math
+import os
 
 import klayout.db as db
 
@@ -92,7 +94,6 @@ def puzzle(out="figures/puzzle.svg", S=30):
             if bits[r * N + c]:
                 cx, cy = P + c * S + S / 2, P + r * S + S / 2
                 pts = []
-                import math
                 for i in range(10):
                     a = -math.pi / 2 + i * math.pi / 5
                     rad = S * 0.30 if i % 2 == 0 else S * 0.125
@@ -134,7 +135,6 @@ def morse(out="figures/morse.svg", scale=6.0, h=26):
 
 
 def write(path, text):
-    import os
     os.makedirs(os.path.dirname(path), exist_ok=True)
     open(path, "w").write(text)
     print("  %-28s %5.1f KB" % (path, len(text) / 1024))

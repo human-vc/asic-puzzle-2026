@@ -9,7 +9,7 @@ import os
 from recovered import REGION_CELLS as REGIONS
 
 N = 11
-STRING = "(* TWO STARS *)"
+from recovered import MESSAGE as STRING
 OUT = "hardcaml"
 
 

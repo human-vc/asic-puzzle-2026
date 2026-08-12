@@ -7,6 +7,7 @@ import subprocess
 import klayout.db as db
 
 import cells as cells_mod
+from recovered import region_letters
 
 
 def main():
@@ -47,8 +48,7 @@ def main():
     A(("input bits", len(bits)))
     A(("stars in the solution", bits.count("1")))
 
-    reg = open("starbattle_check.py").read()
-    A(("regions", len(set(re.findall(r"^[A-K]$", reg, re.M)) or set("ABCDEFGHIJK"))))
+    A(("regions", len(region_letters())))
 
     hc = open("hardcaml/starbattle.ml").read()
     A(("Hardcaml source lines", hc.count("\n") + 1))

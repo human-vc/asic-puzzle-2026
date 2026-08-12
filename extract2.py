@@ -7,6 +7,8 @@ asked the same question -- which pin sites are electrically common -- and the
 two partitions are compared.
 """
 import collections
+import json
+import math
 import sys
 
 import gdstk
@@ -129,7 +131,6 @@ def main(gds="puzzle.gds"):
         groups[v].append(k)
     print("distinct nets touching pins: %d" % len(groups))
 
-    import json
     json.dump({"%.3f,%.3f,%s" % k: str(v) for k, v in out.items()},
               open("extract2_sites.json", "w"))
     return out
@@ -162,7 +163,6 @@ def ref_origins(ref):
 
 
 def transform_point(p, origin, rotation, x_reflection, magnification):
-    import math
     x, y = p
     mag = magnification or 1.0
     x, y = x * mag, y * mag

@@ -10,6 +10,10 @@ def main(path="puzzle_net.json"):
     data = json.load(open(path))
     lib = cells_mod.load_cells("pdk/functional")
     POWER = {"VPWR", "VGND", "VPB", "VNB"}
+    # $1447 has no driver anywhere on the die and feeds two gate inputs. Both
+    # extractors agree, and success and O are provably invariant to it, so it is
+    # a finding about the silicon rather than a fault in the extraction.
+    KNOWN_FLOATING = {"$1447"}
     PORTS_IN = {"clk", "rst_n", "enable", "I"}
 
     drivers = collections.defaultdict(list)
@@ -57,8 +61,10 @@ def main(path="puzzle_net.json"):
         print("  port %-7s drives %d cell pins" % (p, len(loads.get(p, []))))
     for p in ["success"] + ["O[%d]" % i for i in range(8)]:
         print("  port %-9s driven by %s" % (p, drivers.get(p, "NOTHING")))
-    ok = not multi and not undriven and not floating_inputs
-    print("\nRESULT:", "clean" if ok else "PROBLEMS FOUND")
+    unexpected = [n for n in undriven if n not in KNOWN_FLOATING]
+    ok = not multi and not unexpected and not floating_inputs
+    print("\nknown floating nets (documented, not faults):", sorted(KNOWN_FLOATING))
+    print("RESULT:", "clean" if ok else "UNEXPECTED PROBLEMS FOUND")
     return ok
 
 
