@@ -1,3 +1,6 @@
+> SUPERSEDED IN PLACES by an audit on 2026-08-12 that found eight errors in
+> claims derived from this run. See the repo scripts hint_box.py, cycle124.py,
+> output_gen.py and synth_hardcaml.ys for the measured replacements.
 > Record of an independent re-run on 2026-08-12, kept as observed.
 > SINCE CHANGED: `netlist_check.py` row 2 reports FAIL because the script's
 > verdict flipped on the known floating net `$1447`. The script was

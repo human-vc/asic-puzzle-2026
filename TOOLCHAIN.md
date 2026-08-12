@@ -22,7 +22,7 @@ mislabelled.
 ## Prerequisites
 
 ```sh
-python3 -m venv .venv && .venv/bin/pip install klayout gdstk numpy python-sat
+python3 -m venv .venv && .venv/bin/pip install klayout gdstk numpy python-sat pillow
 brew install icarus-verilog yosys          # simulation, synthesis, equivalence
 brew install opam && opam install hardcaml # optional: the Hardcaml version
 ```
@@ -62,10 +62,26 @@ the 5,094 pin sites are electrically common; the partitions must be identical.
 .venv/bin/python trace.py puzzle_net.json 48  # cycle-by-cycle flop trace
 .venv/bin/python regions.py                   # region map, by one-hot probing
 .venv/bin/python place.py && .venv/bin/python blocks.py   # blocks on the die
+.venv/bin/python waveform.py 64 75            # the history window, as text
+.venv/bin/python hint_box.py                  # floorplan vs their hint image
+.venv/bin/python output_gen.py                # decode the message, then try to break it
+.venv/bin/python redundancy.py                # which flops the verdict depends on
 ```
 
 `regions.py` feeds a single star at each of the 121 cells in turn and records
 which region accumulator moves, recovering the hard-wired region map.
+
+`waveform.py` streams a grid with one adjacency violation and prints the twelve
+history taps as rows, so a star travelling down the line reads as a diagonal.
+
+`hint_box.py` measures the boxed region in the shipped `layout.png` against the
+die outline in the same image, then counts how much of the independently
+derived floorplan lands inside it.
+
+`output_gen.py` recovers the mask table by subtracting the permuted LFSR from
+each emitted byte, then attacks the reading: single-bit flips must be XOR-linear
+at every index, and randomising either the LFSR or the index must destroy the
+message.
 
 ## 4. Solving
 
@@ -100,10 +116,11 @@ iverilog -g2012 -DFUNCTIONAL $incs -o tb.vvp \
 
 ```sh
 .venv/bin/python gen_rtl.py       # readable Verilog reconstruction
-yosys -q equiv.ys                 # add: sat -seq 145 ... (see the file)
+yosys equiv.ys                    # bounded miter, 145 cycles under the protocol
 .venv/bin/python gen_liberty.py   # Liberty: PDK functions, areas from the die
 yosys -q synth.ys                 # re-synthesize onto that cell set
 .venv/bin/python roundtrip.py     # compare against the real die
+.venv/bin/python cycle124.py      # reproduce the verdict-timing bug, by depth
 ```
 
 Hardcaml version:
@@ -113,7 +130,8 @@ eval $(opam env --switch=jsasic)
 .venv/bin/python gen_hardcaml.py
 cd hardcaml && dune exec ./main.exe            # simulate
 dune exec ./main.exe verilog > ../starbattle_hardcaml.v
-cd .. && yosys -q equiv_hardcaml.ys            # prove against the silicon
+cd .. && yosys equiv_hardcaml.ys               # prove against the silicon
+yosys -q synth_hardcaml.ys                     # same round trip as synth.ys
 ```
 
 Tiny Tapeout:

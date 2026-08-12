@@ -230,7 +230,7 @@
     <p class="cap">Every gate assigned to a recovered block by cone membership, then placed by probing
       the net at its output pin. The cell counter is the mod-11 one. Die is 200 &times; 353 &micro;m;
       grey marks all other logic. The puzzle&rsquo;s own hint image boxes off one region as the
-      &ldquo;output generator&rdquo;: 203 of the 208 cells recovered under that name fall inside that box,
+      &ldquo;output generator&rdquo;: 207 of the 208 cells recovered under that name fall inside that box,
       as do all 12 of its flip-flops, and no flip-flop from any other block does.</p>
   </section>
 
@@ -290,9 +290,9 @@
         <caption>The recovered function, written as RTL and pushed back down the flow.</caption>
         <thead><tr><th></th><th>On the die</th><th>Verilog</th><th>Hardcaml</th></tr></thead>
         <tbody>
-          <tr><td>logic cells</td><td class="res">728</td><td class="res">451</td><td class="res">450</td></tr>
+          <tr><td>logic cells</td><td class="res">728</td><td class="res">451</td><td class="res">363</td></tr>
           <tr><td>flip-flops</td><td class="res">92</td><td class="res">75</td><td class="res">75</td></tr>
-          <tr><td>cell area</td><td class="res">10,758 &micro;m&sup2;</td><td class="res">6,816 &micro;m&sup2;</td><td class="res">6,379 &micro;m&sup2;</td></tr>
+          <tr><td>cell area</td><td class="res">10,758 &micro;m&sup2;</td><td class="res">6,816 &micro;m&sup2;</td><td class="res">5,892 &micro;m&sup2;</td></tr>
           <tr><td>proved vs the die</td><td class="res">&mdash;</td><td class="res">145 cycles</td><td class="res">145 cycles</td></tr>
         </tbody>
       </table>
@@ -304,8 +304,8 @@
       It is packaged for Tiny Tapeout in <code>tinytapeout/</code>, verified through that pinout.
       The design was written twice, independently, in Verilog and in Hardcaml &mdash; Jane Street&rsquo;s
       own OCaml hardware language, which is what the payload&rsquo;s <code>(* &hellip; *)</code> is
-      winking at. Both are proved equivalent to the silicon by the same miter, and they converge
-      to within one cell of each other.</p>
+      winking at. Both are proved equivalent to the silicon by the same miter. Through the identical
+      synthesis flow they do <em>not</em> converge in size: 451 cells against 363.</p>
   </section>
 
   <section>

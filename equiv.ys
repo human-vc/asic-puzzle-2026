@@ -26,3 +26,4 @@ async2sync
 opt -fast
 
 stat
+sat -seq 145 -prove-asserts -set-init-zero -set-at 1 in_rst_n 0 -set-at 2 in_rst_n 0 -set in_enable 1 -verify
