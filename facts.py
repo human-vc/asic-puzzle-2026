@@ -1,4 +1,8 @@
-"""Re-derive every number worth quoting, from the artifacts themselves."""
+"""Re-derive the numbers worth quoting, from the artifacts themselves.
+
+Numbers this script cannot derive on its own are printed under a separate
+heading naming the script that produced them, so the distinction is visible.
+"""
 import collections
 import json
 import re
@@ -78,17 +82,27 @@ def main():
         if line.strip().startswith("'"):
             A(("easter egg", line.strip()))
 
-    A(("differential grids tested", "37,382 with 0 disagreements"))
-    A(("pin sites both extractors agree on", "5,094 (741 nets each)"))
-    A(("formal claim", "success <=> Star Battle over all 2^121 inputs, UNSAT both ways"))
-    A(("RTL vs silicon", "145 cycles under the protocol; 122 with every input free"))
-    A(("power-up states checked", "16 of 16 give the same message"))
+    # These come from other scripts and are repeated here for convenience. They
+    # are NOT re-derived by this file, and are printed under their own heading
+    # so the distinction survives being copied into a document.
+    quoted = [
+        ("differential grids tested", "37,382 with 0 disagreements (diff_test.py)"),
+        ("pin sites both extractors agree on", "5,094 / 741 nets (compare_extractions.py)"),
+        ("formal claim", "success <=> Star Battle over all 2^121 inputs, UNSAT both ways (proof.py)"),
+        ("RTL vs silicon", "145 cycles under the protocol, 122 with every input free (equiv.ys)"),
+        ("power-up states checked", "16 of 16 give the same message"),
+    ]
 
-    w = max(len(str(k)) for k, _ in out)
-    print("=" * 74)
-    print("VERIFIED FACTS  (re-derived from the artifacts)")
-    print("=" * 74)
+    w = max(len(str(k)) for k, _ in out + quoted)
+    print("=" * 78)
+    print("RE-DERIVED FROM THE ARTIFACTS BY THIS SCRIPT")
+    print("=" * 78)
     for k, val in out:
+        print("  %-*s : %s" % (w, k, val))
+    print()
+    print("REPORTED BY OTHER SCRIPTS, QUOTED HERE (run them to re-derive)")
+    print("-" * 78)
+    for k, val in quoted:
         print("  %-*s : %s" % (w, k, val))
 
 
