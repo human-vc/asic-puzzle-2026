@@ -1,4 +1,10 @@
-"""Unroll the puzzle 121 cycles into CNF and search for inputs asserting success."""
+"""Unroll the puzzle into CNF and search for inputs asserting success.
+
+The verdict lands one cycle after the last cell, so the unroll has to run one
+cycle past the grid: at 121 cycles `success` is still low and the solver
+correctly reports UNSAT. The extra cycle's input bit is free and not part of the
+grid, so only the first 121 are read back.
+"""
 import time
 
 from pysat.solvers import Cadical153
@@ -6,7 +12,8 @@ from pysat.solvers import Cadical153
 from cnf import CnfBackend
 from sim import Design
 
-CYCLES = 121
+GRID_BITS = 121
+CYCLES = GRID_BITS + 1
 
 
 def build(path=("puzzle_net.json"), cycles=CYCLES):
@@ -42,9 +49,10 @@ def main():
     print("solve: %s (%.1fs)" % (sat, time.time() - t0))
     if not sat:
         return
+    gvars = ivars[:GRID_BITS]
     model = set(l for l in s.get_model() if l > 0)
-    bits = [1 if v in model else 0 for v in ivars]
-    print("input bits (121):", "".join(map(str, bits)))
+    bits = [1 if v in model else 0 for v in gvars]
+    print("input bits (%d):" % GRID_BITS, "".join(map(str, bits)))
 
     grid = ["".join(map(str, bits[r * 11:(r + 1) * 11])) for r in range(11)]
     print("\n11x11 grid (row-major, first bit first):")
@@ -57,11 +65,11 @@ def main():
     # count solutions (up to a cap) to see whether the answer is unique
     n = 1
     while n < 5:
-        s.add_clause([-v if b else v for v, b in zip(ivars, bits)])
+        s.add_clause([-v if b else v for v, b in zip(gvars, bits)])
         if not s.solve():
             break
         model = set(l for l in s.get_model() if l > 0)
-        bits = [1 if v in model else 0 for v in ivars]
+        bits = [1 if v in model else 0 for v in gvars]
         n += 1
     print("\ndistinct solutions found (cap 5): %d" % n)
 
