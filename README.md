@@ -7,7 +7,7 @@ per clock, never stores it, accepts exactly one arrangement, and then emits
 ![The recovered region map and the only accepted grid](figures/puzzle.svg)
 
 **[Read the writeup →](WRITEUP.md)** · [Toolchain and commands](TOOLCHAIN.md) ·
-[Jane Street's original puzzle README](PUZZLE.md)
+[Jane Street's puzzle post](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/)
 
 ## What I found
 
@@ -37,7 +37,7 @@ Everything reruns from `puzzle.gds` alone.
 python3 -m venv .venv && .venv/bin/pip install klayout gdstk numpy python-sat pillow
 .venv/bin/python extract.py puzzle.gds puzzle_net.json   # layout to netlist
 .venv/bin/python solve.py                                # the accepted grid
-.venv/bin/python verify.py solution_bits.txt 20          # replay it, read O[7:0]
+.venv/bin/python trace.py verify solution_bits.txt 20    # replay it, read O[7:0]
 ```
 
 [TOOLCHAIN.md](TOOLCHAIN.md) has the rest: the second extractor, the proofs, the

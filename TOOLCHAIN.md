@@ -40,15 +40,20 @@ KLayout `LayoutToNetlist` over the interconnect stack only (li1, mcon, met1-5,
 vias) with no device extraction. The cells keep their names and pin labels, so
 the gate netlist falls out directly. 728 logic cells, 92 flip-flops.
 
-Control: the same command on `warmup/04_final.gds` reproduces the cell histogram
-of the warm-up's shipped ground-truth netlist exactly.
+```sh
+.venv/bin/python extract.py control
+```
+
+The control: the same extraction on `warmup/04_final.gds` must reproduce the cell
+histogram of the warm-up netlist Jane Street ships. 18 cell types, 230 instances,
+identical on both sides. It is the only check of the method against a ground
+truth rather than against itself.
 
 ## 2. Checking the extraction
 
 ```sh
 .venv/bin/python compare_extractions.py   # second extractor, shares no code
-.venv/bin/python netlist_check.py         # one driver per net, no floating inputs
-.venv/bin/python undriven_check.py        # undriven / unloaded nets
+.venv/bin/python netlist_check.py         # one driver per net, undriven / unloaded
 ```
 
 `extract2.py` uses gdstk instead of KLayout, exact polygon booleans instead of
@@ -59,10 +64,10 @@ the 5,094 pin sites are electrically common; the partitions must be identical.
 
 ```sh
 .venv/bin/python analyze.py puzzle_net.json   # flop dependency graph, cones
-.venv/bin/python trace.py puzzle_net.json 48  # cycle-by-cycle flop trace
+.venv/bin/python trace.py flops               # cycle-by-cycle flop trace
 .venv/bin/python regions.py                   # region map, by one-hot probing
 .venv/bin/python place.py && .venv/bin/python blocks.py   # blocks on the die
-.venv/bin/python waveform.py 64 75            # the history window, as text
+.venv/bin/python trace.py window 64 75        # the history window, as text
 .venv/bin/python hint_box.py                  # floorplan vs their hint image
 .venv/bin/python output_gen.py                # decode the message, then try to break it
 .venv/bin/python redundancy.py                # which flops the verdict depends on
@@ -71,8 +76,9 @@ the 5,094 pin sites are electrically common; the partitions must be identical.
 `regions.py` feeds a single star at each of the 121 cells in turn and records
 which region accumulator moves, recovering the hard-wired region map.
 
-`waveform.py` streams a grid with one adjacency violation and prints the twelve
-history taps as rows, so a star travelling down the line reads as a diagonal.
+`trace.py window` streams a grid with one adjacency violation and prints the
+twelve history taps as rows, so a star travelling down the line reads as a
+diagonal.
 
 `hint_box.py` measures the boxed region in the shipped `layout.png` against the
 die outline in the same image, then counts how much of the independently
@@ -87,7 +93,7 @@ message.
 
 ```sh
 .venv/bin/python solve.py            # unroll 122 cycles to CNF, solve
-.venv/bin/python verify.py solution_bits.txt 80
+.venv/bin/python trace.py verify solution_bits.txt 20
 .venv/bin/python starbattle_check.py # independent Star Battle solver
 ```
 

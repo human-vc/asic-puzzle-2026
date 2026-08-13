@@ -22,3 +22,5 @@ cells_behav.v
 sky130_hd_measured.lib
 .DS_Store
 hardcaml_resynth.v
+figures.html
+figure_data.json
