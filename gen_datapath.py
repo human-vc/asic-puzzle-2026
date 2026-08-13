@@ -31,7 +31,7 @@ def fits(text, size, width, font=FONT):
                          % (text, need, size, width))
     return text
 
-W, H = 780, 320
+W, H = 740, 320
 BOXH, STEP = 30, 38
 C2, C2W = 148, 200
 C3, C3W = 392, 300
