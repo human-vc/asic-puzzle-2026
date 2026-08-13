@@ -192,17 +192,3 @@ the text hidden in the stimulus of `example_inputs.vcd`.
 `render.py` inlines every figure and the animation into a single self-contained
 HTML file, so `docs/index.html` needs no network at all. GitHub Pages serves it
 from the `docs/` folder.
-
-## Figure pack
-
-```sh
-.venv/bin/python gen_figures.py      # puzzle, floorplan, morse
-.venv/bin/python gen_datapath.py     # block diagram, counts from blocks.json
-.venv/bin/python gen_animation.py    # the accepted grid streaming, as a GIF
-```
-
-```sh
-.venv/bin/python export_trace.py
-.venv/bin/python -c "open('figures.html','w').write(
-    open('figures_template.html').read().replace('__DATA__', open('figure_data.json').read()))"
-```

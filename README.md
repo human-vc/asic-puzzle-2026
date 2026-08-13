@@ -62,7 +62,6 @@ Verilog and Hardcaml rebuilds, and the easter eggs.
 | `solve.py`, `proof.py`, `diff_test.py` | Finding the grid, proving the predicate, and differential testing. |
 | `regions.py`, `place.py`, `blocks.py` | Recovering the region map and putting the blocks back on the die. |
 | `gen_rtl.py`, `gen_hardcaml.py`, `gen_liberty.py` | The rebuilds and the measured cell library. |
-| `gen_figures.py`, `gen_datapath.py`, `gen_animation.py` | Every figure in the writeup. |
 | `warmup/`, `pdk/`, `tinytapeout/` | Jane Street's warm-up design, the SkyWater cell models, and the Tiny Tapeout packaging. |
 
 </div>
