@@ -52,6 +52,8 @@ Verilog and Hardcaml rebuilds, and the easter eggs.
 
 ## Map of the repository
 
+<div align="center">
+
 | | |
 |---|---|
 | `recovered.py` | Every fact recovered from the layout, in one place. Run it to check the structure against itself. |
@@ -62,3 +64,5 @@ Verilog and Hardcaml rebuilds, and the easter eggs.
 | `gen_rtl.py`, `gen_hardcaml.py`, `gen_liberty.py` | The rebuilds and the measured cell library. |
 | `gen_figures.py`, `gen_datapath.py`, `gen_animation.py` | Every figure in the writeup. |
 | `warmup/`, `pdk/`, `tinytapeout/` | Jane Street's warm-up design, the SkyWater cell models, and the Tiny Tapeout packaging. |
+
+</div>

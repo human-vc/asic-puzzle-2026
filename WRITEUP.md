@@ -1,15 +1,15 @@
 # The chip that never stores the puzzle
 
 I went in expecting the extraction to be the wall. It wasn't, and working out
-what the gates were for took everything after that.
+what the logic was for took everything after that.
 
 Behind the 728 logic cells on this die sits an 11 by 11 two-star Star Battle
 checker that reads one bit per cycle, retains twelve of them, and still decides
 every rule. It accepts exactly one arrangement, and it releases
 `(* TWO STARS *)` only after that arrangement has cleared every constraint.
 
-This is the path I took: netlist out of the layout, a gate-level simulator built
-to interrogate it, then the architecture itself, three wrong turns, and the
+This is the path I took: netlist out of the layout, a simulator built to
+interrogate it, then the architecture itself, three wrong turns, and the
 answer. Everything below reruns from `puzzle.gds`.
 
 <p align="center">
@@ -21,6 +21,8 @@ answer. Everything below reruns from `puzzle.gds`.
 
 ## What the chip is
 
+<div align="center">
+
 | Property | Recovered result |
 |---|---|
 | Input | 121 bits on `I`, row-major, one per enabled clock |
@@ -30,6 +32,8 @@ answer. Everything below reruns from `puzzle.gds`.
 | Die | 200 by 352.7 µm |
 | Logic | 728 cells, including 92 flip-flops, beside 890 inert fill, tap, decap, and diode cells |
 | Extraction | 741 nets touching 5,094 resolved pin sites |
+
+</div>
 
 Different rows rest on different kinds of evidence, and I have tried to keep them
 apart. 121 one-hot experiments establish the region map. Logic cones and
@@ -46,7 +50,7 @@ pin labels on `li1`, and the top-level port labels on `met3` all survived the
 layout flow. KLayout's connectivity engine could therefore recover the
 interconnect without recognising cells geometrically. "Nothing is labeled" still
 describes the hard part of the puzzle, but the missing labels concern function,
-not identity: the layout gives up its gates readily and says almost nothing about
+not identity: the layout gives up its cells readily and says almost nothing about
 why they are wired that way.
 
 That made the extraction a premise I still had to test.
@@ -81,7 +85,7 @@ graph, then evaluates it through a swappable backend. `BitBackend` represents
 each net as a 64-bit integer and runs 64 candidate grids at a time. `CnfBackend`
 represents each net as a SAT literal and emits Tseitin clauses instead of
 computing anything. Simulation, the search for an accepting grid, and every
-equivalence proof therefore run over the same gate semantics. A mistake in how I
+equivalence proof therefore run over the same cell models. A mistake in how I
 modelled a cell cannot make the simulation and the proof disagree in my favour,
 because there is only one model to be wrong.
 
@@ -95,7 +99,7 @@ The rest is smaller and mostly exists to keep me honest:
   and that the regions cover all 121 cells.
 - `regions.py`, which feeds a single star at each of the 121 input positions and
   records which accumulator moves. This measured the region map after reading it
-  off the gates had produced a wrong one.
+  off the cones had produced a wrong one.
 - `gen_liberty.py`, which builds a Liberty file whose Boolean functions come from
   the PDK and whose cell areas are measured out of `puzzle.gds`, so the
   re-synthesis comparison later is against this die and not a generic library.
@@ -154,7 +158,7 @@ adjacency      .  .  .  .  .  .  .  .  .  .  .  .  .  1  1
 The same twelve bits are easier to believe in motion. Below, the accepted grid
 streams through the extracted netlist one cell per clock, with the window shown
 both on the grid and as the delay line itself. Every value in the animation is
-read out of the gate-level model, including the verdict at the end.
+read out of the extracted netlist, including the verdict at the end.
 
 <p align="center">
   <img src="figures/streaming.gif" width="680" alt="The accepted grid streaming through the recovered chip">
@@ -188,7 +192,7 @@ problem. I unrolled 122 cycles into CNF through the simulator's SAT backend,
 22-star grid shown at the top. My first attempt at this query was unsatisfiable,
 which turned out to be the right answer to the wrong question: the unroll has to
 run one cycle past the grid, because at 121 cycles the verdict has not landed
-yet. Simulating the gates then pinned the timing exactly.
+yet. Simulating the netlist then pinned the timing exactly.
 
 ```text
 success right after last bit: 0
@@ -202,7 +206,7 @@ asc: (* TWO STARS *).....
 Jane Street marked the output generator as safe to ignore, and it can indeed be
 removed without disturbing `success`. Understanding it anyway explains why those
 final bytes have to be simulated instead of read. I went looking for plaintext
-constants among its gates and found none, which left the question of where
+constants among its cells and found none, which left the question of where
 fifteen bytes could be hiding in a block with no obvious ROM.
 
 What cracked it was linearity. Flipping a single LFSR bit moved exactly one
@@ -291,7 +295,8 @@ Bounded equivalence is the strongest claim here, and it stays bounded. A
 k-induction proof did not converge across the differently encoded state spaces,
 and a fixed-point argument failed too, because an arbitrary finished state admits
 unreachable assignments. One extracted net, `$1447`, has no driver and feeds two
-gates in the output path; forcing it to each value in turn changes nothing, and
+cells in the output path, the A1 pin of an `a31oi` and of an `a311o`; forcing it
+to each value in turn changes nothing, and
 the predicate proof stays UNSAT in both directions when it gets a fresh SAT
 variable every cycle.
 
@@ -332,6 +337,8 @@ boundary.
   the rest of the logic, and every cell is placed from the geometry of its output pin.
 </p>
 
+<div align="center">
+
 | Block | Cells | Flops | Role |
 |---|---:|---:|---|
 | Cell and row counters | 14 | 8 | Locate the incoming bit |
@@ -344,6 +351,8 @@ boundary.
 | Total-star counter | 22 | 8 | Compare the running total against 22 |
 | Success latch | 32 | 2 | Register the final verdict |
 | Output generator | 208 | 12 | Emit the masked message |
+
+</div>
 
 The rows above account for all 92 flip-flops and cover the 713 placed cells. A
 further 124 are shared between cones and 17 resist single attribution.
