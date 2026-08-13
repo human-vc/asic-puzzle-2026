@@ -13,11 +13,12 @@ This is the path I took: netlist out of the layout, a gate-level simulator built
 to interrogate it, the checker read out of the gates, three wrong turns, and then
 the answer. Everything below reruns from `puzzle.gds`.
 
-![Recovered regions and the unique accepted grid](figures/puzzle.svg)
-
-The recovered region map and the only accepted grid. Every region is
-4-connected; each row, column, and region contains two stars; no two stars
-touch.
+<p align="center">
+  <img src="figures/puzzle.svg" width="460" alt="Recovered regions and the unique accepted grid">
+  <br>
+  The recovered region map and the only accepted grid. Every region is
+  4-connected; each row, column, and region contains two stars; no two stars touch.
+</p>
 
 ## What the chip is
 
@@ -111,10 +112,12 @@ the grid, which rules out every design I had been assuming. Instead, each
 arriving bit bumps a handful of small counters and slides into a 12-stage history
 line, which lets the checker settle every rule as a stream.
 
-![The recovered datapath](figures/datapath.svg)
-
-The whole checker. One bit enters on the left, and by the time it reaches the
-verdict it has been folded into a twelve-deep window and five small tallies.
+<p align="center">
+  <img src="figures/datapath.svg" width="740" alt="The recovered datapath">
+  <br>
+  The whole checker. One bit enters on the left, and by the time it reaches the
+  verdict it has been folded into a twelve-deep window and five small tallies.
+</p>
 
 Adjacency is where that economy shows best, and it was the first block I felt I
 understood. A new star has to be compared against only four earlier positions: the cell immediately to its left and the three above it.
@@ -154,10 +157,12 @@ streams through the extracted netlist one cell per clock, with the window shown
 both on the grid and as the delay line itself. Every value in the animation is
 read out of the gate-level model, including the verdict at the end.
 
-![The accepted grid streaming through the recovered chip](figures/streaming.gif)
-
-121 cycles of the real netlist. The four deeper cells are the earlier
-neighbours the adjacency check is allowed to see.
+<p align="center">
+  <img src="figures/streaming.gif" width="680" alt="The accepted grid streaming through the recovered chip">
+  <br>
+  121 cycles of the real netlist. The four deeper cells are the earlier
+  neighbours the adjacency check is allowed to see.
+</p>
 
 The counters are just as narrow, for the same reason. Once every row, column, and
 region must hold exactly two stars, no tally ever needs to tell four from five,
@@ -321,11 +326,12 @@ of its flip-flops, no flip-flop from another block, and no unshared cell from
 another block. Only `$296` sits well outside the box, and nothing straddles its
 boundary.
 
-![Functional blocks placed on the recovered die](figures/floorplan.svg)
-
-One panel per recovered block. Blue cells belong to that block, grey cells are
-the rest of the logic, and every cell is placed from the geometry of its output
-pin.
+<p align="center">
+  <img src="figures/floorplan.svg" width="740" alt="Functional blocks placed on the recovered die">
+  <br>
+  One panel per recovered block. Blue cells belong to that block, grey cells are
+  the rest of the logic, and every cell is placed from the geometry of its output pin.
+</p>
 
 | Block | Cells | Flops | Role |
 |---|---:|---:|---|
@@ -374,9 +380,11 @@ Thirty-six placeholder cells live in that strip. I had marked them electrically
 irrelevant, which was correct and incomplete. They carry no logic, but they come
 in two widths, and the widths are dots and dashes.
 
-![Morse code formed by placeholder-cell widths](figures/morse.svg)
-
-Drawn to scale, the 36 cells below the array decode to `PER ARENAM AD ASTRA`.
+<p align="center">
+  <img src="figures/morse.svg" width="740" alt="Morse code formed by placeholder-cell widths">
+  <br>
+  Drawn to scale, the 36 cells below the array decode to <code>PER ARENAM AD ASTRA</code>.
+</p>
 
 Following the anomaly I had ignored recovered `PER ARENAM AD ASTRA`, "through the
 sand to the stars." A second message sits in `example_inputs.vcd`: reading each

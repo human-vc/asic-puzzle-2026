@@ -4,10 +4,15 @@ The chip is an 11 by 11 two-star Star Battle checker. It reads the grid one cell
 per clock, never stores it, accepts exactly one arrangement, and then emits
 `(* TWO STARS *)`.
 
-![The recovered region map and the only accepted grid](figures/puzzle.svg)
+<p align="center">
+  <img src="figures/puzzle.svg" width="460" alt="The recovered region map and the only accepted grid">
+</p>
 
-**[Read the writeup →](WRITEUP.md)** · [Toolchain and commands](TOOLCHAIN.md) ·
-[Jane Street's puzzle post](https://blog.janestreet.com/can-you-reverse-engineer-an-asic/)
+<p align="center">
+  <strong><a href="WRITEUP.md">Read the writeup →</a></strong> ·
+  <a href="TOOLCHAIN.md">Toolchain and commands</a> ·
+  <a href="https://blog.janestreet.com/can-you-reverse-engineer-an-asic/">Jane Street's puzzle post</a>
+</p>
 
 ## What I found
 
@@ -27,7 +32,9 @@ per clock, never stores it, accepts exactly one arrangement, and then emits
   `PER ARENAM AD ASTRA` in Morse, and the supplied `example_inputs.vcd` reads as
   `The night sky awaits`.
 
-![The accepted grid streaming through the recovered chip](figures/streaming.gif)
+<p align="center">
+  <img src="figures/streaming.gif" width="680" alt="The accepted grid streaming through the recovered chip">
+</p>
 
 ## Reproducing it
 
