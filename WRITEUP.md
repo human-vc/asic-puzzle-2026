@@ -1,8 +1,7 @@
 # The chip that never stores the puzzle
 
-I went in expecting the extraction to be the wall. It wasn't, and everything
-interesting happened after it. Getting the netlist was the easy half. The work
-was reading a checker back out of it.
+I went in expecting the extraction to be the wall. It wasn't, and working out
+what the gates were for took everything after that.
 
 Behind the 728 logic cells on this die sits an 11 by 11 two-star Star Battle
 checker that reads one bit per cycle, retains twelve of them, and still decides
