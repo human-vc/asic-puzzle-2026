@@ -27,8 +27,13 @@ brew install icarus-verilog yosys          # simulation, synthesis, equivalence
 brew install opam && opam install hardcaml # optional: the Hardcaml version
 ```
 
-`pdk/functional/` and `pdk/verilog/` hold the SkyWater cell models, fetched from
-`google/skywater-pdk-libs-sky130_fd_sc_hd`.
+```sh
+tools/fetch_pdk.sh
+```
+
+That populates `pdk/functional/` and `pdk/verilog/` with the SkyWater cell models
+from `google/skywater-pdk-libs-sky130_fd_sc_hd`. Nothing downstream of the
+extraction runs without them, and they are not in the repo.
 
 ## 1. Layout to netlist
 

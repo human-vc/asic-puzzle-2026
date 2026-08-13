@@ -24,3 +24,5 @@ sky130_hd_measured.lib
 hardcaml_resynth.v
 figures.html
 figure_data.json
+WRITEUP-SCAFFOLD.md
+notes/
