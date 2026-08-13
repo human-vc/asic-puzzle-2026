@@ -139,7 +139,7 @@ def draw(fr, bits, regions):
     window = [] if cur is None else [cur - k - 1 for k in range(12) if cur - k - 1 >= 0]
     comp = [] if cur is None else [n for n in neighbours(cur) if n in window]
 
-    g.text((GX, 20), "121 cells in, one per enabled clock", font=F13, fill=INK)
+    g.text((GX, 20), "121 cells in, one at a time", font=F13, fill=INK)
 
     for i in range(N * N):
         r, c = divmod(i, N)

@@ -4,7 +4,7 @@ I went in expecting the extraction to be the hard part by a distance. It wasn't,
 and working out what the logic was for took everything after that.
 
 Behind the 728 logic cells on this die sits an 11 by 11 two-star Star Battle
-checker that reads one cell per enabled clock, retains twelve of them, and still
+checker that reads one cell at a time, retains twelve of them, and still
 decides every rule. It accepts exactly one arrangement, and it releases `(* TWO
 STARS *)` only after that arrangement has cleared every constraint.
 
@@ -25,7 +25,7 @@ answer. Everything below reruns from `puzzle.gds`.
 
 | Property | Recovered result |
 |---|---|
-| Input | 121 bits on `I`, row-major, one cell per enabled clock |
+| Input | 121 bits on `I`, row-major, one at a time while `enable` is high |
 | Verdict | `success`, one cycle after the final bit |
 | Accepted grids | Exactly one |
 | Payload | 15 bytes on `O[7:0]`: `(* TWO STARS *)` |
@@ -157,7 +157,7 @@ adjacency      .  .  .  .  .  .  .  .  .  .  .  .  .  1  1
 ```
 
 The same twelve bits are easier to believe in motion. Below, the accepted grid
-streams through the extraction one cell per enabled clock, with the window shown
+streams through the extraction one cell at a time, with the window shown
 both on the grid and as the delay line itself. Every value in the animation is
 read out of the simulated cells, including the verdict at the end.
 

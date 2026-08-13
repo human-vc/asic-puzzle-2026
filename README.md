@@ -1,7 +1,7 @@
 # Reverse-engineering the Jane Street ASIC puzzle
 
 The chip is an 11 by 11 two-star Star Battle checker. It reads the grid one cell
-per enabled clock, never stores it, accepts exactly one arrangement, and then emits
+at a time, never stores it, accepts exactly one arrangement, and then emits
 `(* TWO STARS *)`.
 
 <p align="center">
