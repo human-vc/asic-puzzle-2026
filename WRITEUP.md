@@ -118,7 +118,7 @@ line, which lets it settle every rule as a stream.
 <p align="center">
   <img src="figures/datapath.svg" width="740" alt="The recovered datapath">
   <br>
-  The whole machine. One bit enters on the left, and by the time it reaches the
+  The whole datapath. One bit enters on the left, and by the time it reaches the
   verdict it has been folded into a twelve-deep window and five small tallies.
 </p>
 
@@ -186,7 +186,7 @@ accepts.
 
 ## The answer
 
-By this point I knew what the machine accepts, so getting the grid was a search
+By this point the rules were settled, so getting the grid was a search
 problem. I unrolled 122 cycles into CNF through the simulator's SAT backend,
 11,970 variables and 39,650 clauses, and the solver came back with the 121-bit,
 22-star grid shown at the top. My first attempt at this query was unsatisfiable,
@@ -360,7 +360,7 @@ further 124 are shared between cones and 17 resist single attribution.
 ## Back to hardware
 
 A rebuild earns more trust when it survives another form, so I wrote the
-recovered machine twice: 148 lines of Verilog and 98 lines of Hardcaml. Bounded
+recovered design twice: 148 lines of Verilog and 98 lines of Hardcaml. Bounded
 miters against the extracted netlist close for 145 cycles under the operating
 protocol, with 3,100,406 variables and 8,531,120 clauses for Verilog and
 1,831,366 variables and 4,842,030 clauses for Hardcaml. Hardcaml was the natural

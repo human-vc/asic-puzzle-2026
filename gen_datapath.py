@@ -1,4 +1,4 @@
-"""Block diagram of the recovered machine, with every count read back from the
+"""Block diagram of the recovered design, with every count read back from the
 recovered structure rather than typed into the drawing.
 
 The shape is the argument: one bit enters on the left, and by the time it has

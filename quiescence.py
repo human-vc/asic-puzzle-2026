@@ -1,6 +1,6 @@
 """Two experiments about what the chip does once it has finished.
 
-The hope was that the machine reaches a fixed point, which would upgrade the
+The hope was that the design reaches a fixed point, which would upgrade the
 bounded equivalence proof to a complete one. It does not, and this script is
 the evidence: quantifying over ARBITRARY states that satisfy done and
 index-saturated -- unreachable ones included -- five flops can still move, so
