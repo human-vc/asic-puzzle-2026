@@ -183,6 +183,16 @@ iverilog -g2012 -o tt.vvp tinytapeout/src/project.v \
 Recovers the Morse spelled by the placeholder cells below the cell array, and
 the text hidden in the stimulus of `example_inputs.vcd`.
 
+## The rendered page
+
+```sh
+.venv/bin/python render.py docs/index.html WRITEUP.md
+```
+
+`render.py` inlines every figure and the animation into a single self-contained
+HTML file, so `docs/index.html` needs no network at all. GitHub Pages serves it
+from the `docs/` folder.
+
 ## Figure pack
 
 ```sh
