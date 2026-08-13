@@ -10,8 +10,8 @@ every rule. It accepts exactly one arrangement, and it releases
 `(* TWO STARS *)` only after that arrangement has cleared every constraint.
 
 This is the path I took: netlist out of the layout, a gate-level simulator built
-to interrogate it, the checker read out of the gates, three wrong turns, and then
-the answer. Everything below reruns from `puzzle.gds`.
+to interrogate it, the architecture recovered from the gates, three wrong turns,
+and then the answer. Everything below reruns from `puzzle.gds`.
 
 <p align="center">
   <img src="figures/puzzle.svg" width="460" alt="Recovered regions and the unique accepted grid">
@@ -103,19 +103,19 @@ The rest is smaller and mostly exists to keep me honest:
 - `starbattle_check.py`, an independent Star Battle solver that knows nothing
   about the netlist, so uniqueness could be confirmed from outside.
 
-## Reading the checker
+## How it checks a grid
 
 I got the architecture out of the arithmetic before I had properly read a single
 cone. 121 puzzle bits enter the circuit. Only 92 flip-flops exist, and 12 of
 those belong to the output generator. There is nowhere near enough state to hold
 the grid, which rules out every design I had been assuming. Instead, each
 arriving bit bumps a handful of small counters and slides into a 12-stage history
-line, which lets the checker settle every rule as a stream.
+line, which lets it settle every rule as a stream.
 
 <p align="center">
   <img src="figures/datapath.svg" width="740" alt="The recovered datapath">
   <br>
-  The whole checker. One bit enters on the left, and by the time it reaches the
+  The whole machine. One bit enters on the left, and by the time it reaches the
   verdict it has been folded into a twelve-deep window and five small tallies.
 </p>
 
@@ -183,7 +183,7 @@ accepts.
 
 ## The answer
 
-By this point I knew what the checker accepts, so getting the grid was a search
+By this point I knew what the machine accepts, so getting the grid was a search
 problem. I unrolled 122 cycles into CNF through the simulator's SAT backend,
 11,970 variables and 39,650 clauses, and the solver came back with the 121-bit,
 22-star grid shown at the top. My first attempt at this query was unsatisfiable,
@@ -306,7 +306,7 @@ the source, and synthesis could not prove it away.
 
 ## Their hint as a test
 
-Cone membership divided the checker into functional blocks, and the blocks then
+Cone membership divided the design into functional blocks, and the blocks then
 had to be put back on the die. I assumed at first that the netlist and the layout
 enumerate their instances in the same order, which is the kind of assumption that
 costs an afternoon. They do not. Zipping the two lists agrees on the cell master
@@ -352,7 +352,7 @@ further 124 are shared between cones and 17 resist single attribution.
 ## Back to hardware
 
 A rebuild earns more trust when it survives another form, so I wrote the
-recovered checker twice: 148 lines of Verilog and 98 lines of Hardcaml. Bounded
+recovered machine twice: 148 lines of Verilog and 98 lines of Hardcaml. Bounded
 miters against the extracted netlist close for 145 cycles under the operating
 protocol, with 3,100,406 variables and 8,531,120 clauses for Verilog and
 1,831,366 variables and 4,842,030 clauses for Hardcaml. Hardcaml was the natural
