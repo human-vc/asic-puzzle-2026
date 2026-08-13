@@ -1,5 +1,3 @@
-# Bounded sequential equivalence: reconstructed RTL vs the netlist extracted
-# from puzzle.gds. Both are driven from reset with free enable/I every cycle.
 
 read_verilog cells_behav.v
 read_verilog puzzle_extracted.v

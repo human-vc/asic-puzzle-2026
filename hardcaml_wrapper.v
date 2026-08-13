@@ -1,5 +1,3 @@
-// Adapts the Hardcaml design to the silicon's port names and reset polarity so
-// the same miter can compare it against the netlist extracted from puzzle.gds.
 `default_nettype none
 module puzzle_hardcaml (
     input  wire       clk,

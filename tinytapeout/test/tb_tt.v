@@ -1,7 +1,6 @@
 `timescale 1ns/1ps
 `default_nettype none
 
-// Feeds the grid through the Tiny Tapeout pinout and reads the message back.
 module tb_tt;
   reg clk = 0, rst_n = 0, ena = 1;
   reg [7:0] ui_in = 0;
@@ -27,7 +26,7 @@ module tb_tt;
     repeat (3) @(posedge clk);
     #1 rst_n = 1;
     for (k = 0; k < 121; k = k + 1) begin
-      ui_in = {6'b0, 1'b1, bits[k]};   // feed = 1, grid bit
+      ui_in = {6'b0, 1'b1, bits[k]};
       @(posedge clk); #1;
     end
     ui_in = 8'b0;

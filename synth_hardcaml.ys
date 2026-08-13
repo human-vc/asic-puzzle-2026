@@ -1,6 +1,3 @@
-# Round trip for the Hardcaml reconstruction, run through the same flow as
-# synth.ys so the two areas are comparable: same Liberty (areas measured off
-# puzzle.gds), same mapping passes, same yosys.
 read_verilog starbattle_hardcaml.v
 read_verilog hardcaml_wrapper.v
 hierarchy -top puzzle_hardcaml

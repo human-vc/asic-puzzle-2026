@@ -346,7 +346,7 @@ further 124 are shared between cones and 17 resist single attribution.
 ## Back to hardware
 
 A rebuild earns more trust when it survives another form, so I wrote the
-recovered checker twice: 169 lines of Verilog and 109 lines of Hardcaml. Bounded
+recovered checker twice: 148 lines of Verilog and 98 lines of Hardcaml. Bounded
 miters against the extracted netlist close for 145 cycles under the operating
 protocol, with 3,100,406 variables and 8,531,120 clauses for Verilog and
 1,831,366 variables and 4,842,030 clauses for Hardcaml. Hardcaml was the natural

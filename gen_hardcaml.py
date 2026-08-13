@@ -5,12 +5,19 @@ what was recovered from the layout. Hardcaml writes Verilog, so the result goes
 through the identical yosys miter against the netlist extracted from puzzle.gds.
 """
 import os
+import re
 
 from recovered import REGION_CELLS as REGIONS
 
 N = 11
 from recovered import MESSAGE as STRING
 OUT = "hardcaml"
+
+
+def uncomment(text):
+    text = re.sub(r"\(\*.*?\*\)", "", text, flags=re.S)
+    text = re.sub(r"[ \t]+\n", "\n", text)
+    return re.sub(r"\n{3,}", "\n\n", text).rstrip("\n") + "\n"
 
 
 def main():
@@ -171,7 +178,7 @@ let () =
 ;;
 '''
 
-    open(os.path.join(OUT, "starbattle.ml"), "w").write(ml)
+    open(os.path.join(OUT, "starbattle.ml"), "w").write(uncomment(ml))
     open(os.path.join(OUT, "main.ml"), "w").write(main_ml)
     open(os.path.join(OUT, "dune-project"), "w").write("(lang dune 3.0)\n")
     open(os.path.join(OUT, "dune"), "w").write(

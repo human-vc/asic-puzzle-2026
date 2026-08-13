@@ -1,5 +1,3 @@
-# Round trip: synthesize the reconstructed RTL onto the same cell set the die
-# uses, mapping with a Liberty derived from the die itself.
 read_verilog -sv puzzle_rtl.v
 hierarchy -top puzzle_rtl
 synth -top puzzle_rtl -flatten

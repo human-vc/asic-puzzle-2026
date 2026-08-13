@@ -8,6 +8,26 @@ from recovered import REGION_CELLS as REGIONS
 N = 11
 from recovered import MESSAGE as STRING
 
+import re
+
+
+def uncomment(text):
+    out = []
+    for l in text.splitlines():
+        q, cut = False, None
+        for i, ch in enumerate(l):
+            if ch == '"':
+                q = not q
+            elif ch == "/" and not q and l[i:i + 2] == "//":
+                cut = i
+                break
+        if cut is not None:
+            l = l[:cut].rstrip()
+            if not l:
+                continue
+        out.append(l)
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(out)).rstrip("\n") + "\n"
+
 
 def main(out="puzzle_rtl.v"):
     grid = [REGIONS[r * N:(r + 1) * N] for r in range(N)]
@@ -180,7 +200,7 @@ endmodule
 
 `default_nettype wire
 '''
-    open(out, "w").write(v)
+    open(out, "w").write(uncomment(v))
     print("wrote %s (%d lines)" % (out, v.count("\n") + 1))
     print("regions:", "".join(letters), "-> ids 0..%d" % (len(letters) - 1))
 

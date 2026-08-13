@@ -1,11 +1,4 @@
 #!/bin/zsh
-# Fetch the SkyWater cell models this project checks against, into pdk/.
-#
-#   pdk/functional/   one functional model per cell base name
-#   pdk/verilog/      the sized wrappers and the UDP models, for Icarus
-#
-# Source: github.com/google/skywater-pdk-libs-sky130_fd_sc_hd (Apache-2.0).
-# Run extract.py first: the cell list comes from the netlist itself.
 set -u
 cd ${0:a:h}/..
 BASE=https://raw.githubusercontent.com/google/skywater-pdk-libs-sky130_fd_sc_hd/main
@@ -21,7 +14,7 @@ print("%d cell types used by the design" % len(names))
 EOF
 fi
 
-get() {  # $1 = path relative to the library repo
+get() {
   local out=pdk/verilog/$1
   [[ -s $out ]] && return 0
   mkdir -p ${out:h}

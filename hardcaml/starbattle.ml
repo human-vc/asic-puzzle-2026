@@ -1,14 +1,4 @@
-(* The Jane Street 2026 ASIC puzzle chip, recovered from its layout and
-   written in Hardcaml.
 
-   The design reads an 11x11 grid as 121 serial bits and reports whether it is a
-   valid two-star Star Battle solution: two stars in every row, column and
-   region, none of them touching. It then streams a message out of [o].
-
-   The structure follows the silicon: a mod-11 column counter and a mod-11 row
-   counter, a 12-deep history of the input supplying the three neighbours in the
-   row above, one row tally reused every row, and eleven column and eleven
-   region tallies that persist to the end. *)
 
 open! Base
 open Hardcaml
@@ -17,20 +7,19 @@ open Signal
 let n = 11
 let k w v = of_int ~width:w v
 
-(* Region of each cell, recovered by probing the accumulators of the real chip. *)
 let region_rom =
   [
-      [ k 4 0; k 4 0; k 4 0; k 4 0; k 4 0; k 4 2; k 4 2; k 4 6; k 4 9; k 4 9; k 4 8 ]  (* row 0  *);
-      [ k 4 0; k 4 0; k 4 3; k 4 0; k 4 0; k 4 2; k 4 6; k 4 6; k 4 9; k 4 9; k 4 8 ]  (* row 1  *);
-      [ k 4 0; k 4 0; k 4 3; k 4 2; k 4 2; k 4 2; k 4 2; k 4 6; k 4 6; k 4 9; k 4 8 ]  (* row 2  *);
-      [ k 4 0; k 4 0; k 4 3; k 4 2; k 4 1; k 4 1; k 4 1; k 4 8; k 4 6; k 4 6; k 4 8 ]  (* row 3  *);
-      [ k 4 3; k 4 0; k 4 3; k 4 2; k 4 1; k 4 8; k 4 8; k 4 8; k 4 8; k 4 8; k 4 8 ]  (* row 4  *);
-      [ k 4 3; k 4 3; k 4 3; k 4 2; k 4 1; k 4 1; k 4 1; k 4 8; k 4 10; k 4 10; k 4 10 ]  (* row 5  *);
-      [ k 4 2; k 4 2; k 4 2; k 4 2; k 4 2; k 4 2; k 4 1; k 4 8; k 4 10; k 4 7; k 4 7 ]  (* row 6  *);
-      [ k 4 2; k 4 5; k 4 5; k 4 5; k 4 1; k 4 1; k 4 1; k 4 8; k 4 10; k 4 7; k 4 7 ]  (* row 7  *);
-      [ k 4 2; k 4 5; k 4 5; k 4 4; k 4 8; k 4 8; k 4 8; k 4 8; k 4 10; k 4 7; k 4 7 ]  (* row 8  *);
-      [ k 4 2; k 4 2; k 4 5; k 4 4; k 4 4; k 4 8; k 4 8; k 4 8; k 4 10; k 4 10; k 4 10 ]  (* row 9  *);
-      [ k 4 2; k 4 5; k 4 5; k 4 4; k 4 8; k 4 8; k 4 8; k 4 8; k 4 8; k 4 8; k 4 8 ]  (* row 10 *)
+      [ k 4 0; k 4 0; k 4 0; k 4 0; k 4 0; k 4 2; k 4 2; k 4 6; k 4 9; k 4 9; k 4 8 ]  ;
+      [ k 4 0; k 4 0; k 4 3; k 4 0; k 4 0; k 4 2; k 4 6; k 4 6; k 4 9; k 4 9; k 4 8 ]  ;
+      [ k 4 0; k 4 0; k 4 3; k 4 2; k 4 2; k 4 2; k 4 2; k 4 6; k 4 6; k 4 9; k 4 8 ]  ;
+      [ k 4 0; k 4 0; k 4 3; k 4 2; k 4 1; k 4 1; k 4 1; k 4 8; k 4 6; k 4 6; k 4 8 ]  ;
+      [ k 4 3; k 4 0; k 4 3; k 4 2; k 4 1; k 4 8; k 4 8; k 4 8; k 4 8; k 4 8; k 4 8 ]  ;
+      [ k 4 3; k 4 3; k 4 3; k 4 2; k 4 1; k 4 1; k 4 1; k 4 8; k 4 10; k 4 10; k 4 10 ]  ;
+      [ k 4 2; k 4 2; k 4 2; k 4 2; k 4 2; k 4 2; k 4 1; k 4 8; k 4 10; k 4 7; k 4 7 ]  ;
+      [ k 4 2; k 4 5; k 4 5; k 4 5; k 4 1; k 4 1; k 4 1; k 4 8; k 4 10; k 4 7; k 4 7 ]  ;
+      [ k 4 2; k 4 5; k 4 5; k 4 4; k 4 8; k 4 8; k 4 8; k 4 8; k 4 10; k 4 7; k 4 7 ]  ;
+      [ k 4 2; k 4 2; k 4 5; k 4 4; k 4 4; k 4 8; k 4 8; k 4 8; k 4 10; k 4 10; k 4 10 ]  ;
+      [ k 4 2; k 4 5; k 4 5; k 4 4; k 4 8; k 4 8; k 4 8; k 4 8; k 4 8; k 4 8; k 4 8 ]
   ]
 ;;
 
@@ -52,18 +41,18 @@ let create ~clock ~reset ~enable ~i =
   let last_row = row_w ==:. (n - 1) in
   let star = step &: i in
   let finish = step &: last_col &: last_row in
-  (* sequencing *)
+
   col_w <== reg spec ~enable:step (mux2 last_col (k 4 0) (col_w +:. 1));
   row_w <== reg spec ~enable:(step &: last_col) (mux2 last_row (k 4 0) (row_w +:. 1));
   done_w <== reg spec ~enable:finish vdd;
-  (* the neighbours: hist.(0) is the cell to the left, 9/10/11 the row above *)
+
   hist_w <== reg spec ~enable:step (concat_msb [ select hist_w 10 0; i ]);
   let left = bit hist_w 0 &: (col_w <>:. 0) in
   let up_right = bit hist_w 9 &: (row_w <>:. 0) &: (col_w <>:. (n - 1)) in
   let up = bit hist_w 10 &: (row_w <>:. 0) in
   let up_left = bit hist_w 11 &: (row_w <>:. 0) &: (col_w <>:. 0) in
   let touching = star &: (left |: up |: up_left |: up_right) in
-  (* tallies: two bits, saturating at three *)
+
   let bump v inc = mux2 inc (mux2 (v ==:. 3) v (v +:. 1)) v in
   let regid =
     mux row_w (List.map region_rom ~f:(fun r -> mux col_w r))
@@ -85,13 +74,13 @@ let create ~clock ~reset ~enable ~i =
   in
   bad_w <== reg spec ~enable:step (bad_w |: touching |: row_bad);
   let ok = all_two &: ~:bad_w &: ~:row_bad &: ~:touching in
-  (* the verdict is registered one cycle after the last cell, as in the silicon *)
+
   let arm = step &: finish in
   let fire = ~:step &: armed_w in
   armed_w <== reg spec ~enable:(arm |: fire) arm;
   let ok_q = reg spec ~enable:arm ok in
   success_w <== reg spec ~enable:fire ok_q;
-  (* output generator: starts when success rises, one byte per clock *)
+
   let sending = success_w &: (oidx_w <>:. List.length message) in
   oidx_w <== reg spec ~enable:sending (oidx_w +:. 1);
   let o = mux2 sending (mux oidx_w (message @ [ k 8 0 ])) (k 8 0) in

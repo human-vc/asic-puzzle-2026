@@ -1,23 +1,14 @@
-/*
- * Star Battle checker -- Tiny Tapeout wrapper.
- *
- * The design inside is a reconstruction of the Jane Street 2026 ASIC puzzle
- * chip, recovered from its GDS: it reads an 11x11 grid as 121 serial bits and
- * asserts success if the grid is a valid two-star Star Battle solution, then
- * streams a message out of the dedicated output byte.
- *
- * SPDX-License-Identifier: Apache-2.0
- */
+
 
 `default_nettype none
 
 module tt_um_starbattle_checker (
-    input  wire [7:0] ui_in,    // dedicated inputs
-    output wire [7:0] uo_out,   // dedicated outputs
-    input  wire [7:0] uio_in,   // bidirectional: input path
-    output wire [7:0] uio_out,  // bidirectional: output path
-    output wire [7:0] uio_oe,   // bidirectional: 1 = drive
-    input  wire       ena,      // high while the design is selected
+    input  wire [7:0] ui_in,
+    output wire [7:0] uo_out,
+    input  wire [7:0] uio_in,
+    output wire [7:0] uio_out,
+    output wire [7:0] uio_oe,
+    input  wire       ena,
     input  wire       clk,
     input  wire       rst_n
 );
