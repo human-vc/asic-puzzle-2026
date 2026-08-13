@@ -1,82 +1,57 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="780" height="486" viewBox="0 0 780 486" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
-<rect width="780" height="486" fill="#fbfcfd"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="320" viewBox="0 0 780 320" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif">
+<rect width="780" height="320" fill="#fbfcfd"/>
 <defs><marker id="a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#767f90"/></marker></defs>
-<text x="24" y="28" font-size="12.5" fill="#12151a">121 bits in, one per clock. 92 flip-flops in total, and nowhere to keep a grid.</text>
-<rect x="24" y="52" width="92" height="54" rx="4" fill="#eef4fc" stroke="#2a78d6"/>
-<text x="35" y="71" font-size="11.5" fill="#12151a">I</text>
-<text x="35" y="86" font-size="10" fill="#767f90">1 bit</text>
-<text x="35" y="100" font-size="9.5" fill="#767f90">per clock</text>
-<text x="24" y="126" font-size="9" fill="#767f90">clk, enable, rst_n</text>
-<rect x="148" y="52" width="200" height="54" rx="4" fill="#eef4fc" stroke="#2a78d6"/>
+<text x="24" y="28" font-size="12.5" fill="#12151a">121 bits into 92 flip-flops</text>
+<rect x="24" y="52" width="92" height="30" rx="4" fill="#eef4fc" stroke="#2a78d6"/>
+<text x="35" y="71" font-size="11.5" fill="#12151a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">I</text>
+<text x="24" y="100" font-size="9" fill="#12151a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">clk, enable, rst_n</text>
+<rect x="148" y="52" width="200" height="30" rx="4" fill="#eef4fc" stroke="#2a78d6"/>
 <text x="159" y="71" font-size="11.5" fill="#12151a">input delay line</text>
-<text x="159" y="86" font-size="10" fill="#767f90">12 cells, 12 flops</text>
-<text x="159" y="100" font-size="9.5" fill="#767f90">the previous twelve bits</text>
-<rect x="148" y="112" width="200" height="54" rx="4" fill="#ffffff" stroke="#ccd2dd"/>
-<text x="159" y="131" font-size="11.5" fill="#12151a">cell counter (mod 11)</text>
-<text x="159" y="146" font-size="10" fill="#767f90">5 cells, 4 flops</text>
-<text x="159" y="160" font-size="9.5" fill="#767f90">column of the arriving bit</text>
-<rect x="148" y="172" width="200" height="54" rx="4" fill="#ffffff" stroke="#ccd2dd"/>
-<text x="159" y="191" font-size="11.5" fill="#12151a">row counter</text>
-<text x="159" y="206" font-size="10" fill="#767f90">9 cells, 4 flops</text>
-<text x="159" y="220" font-size="9.5" fill="#767f90">row of the arriving bit</text>
-<rect x="148" y="232" width="200" height="48" rx="4" fill="#ffffff" stroke="#ccd2dd"/>
-<text x="159" y="251" font-size="11.5" fill="#12151a">run / done flag</text>
-<text x="159" y="266" font-size="10" fill="#767f90">3 cells, 2 flops</text>
-<text x="159" y="280" font-size="9.5" fill="#767f90">end of the stream</text>
-<text x="392" y="42" font-size="11" fill="#767f90">the five rules, settled as the stream runs</text>
-<rect x="392" y="52" width="300" height="54" rx="4" fill="#ffffff" stroke="#ccd2dd"/>
+<rect x="148" y="90" width="200" height="30" rx="4" fill="#ffffff" stroke="#ccd2dd"/>
+<text x="159" y="109" font-size="11.5" fill="#12151a">cell counter (mod 11)</text>
+<rect x="148" y="128" width="200" height="30" rx="4" fill="#ffffff" stroke="#ccd2dd"/>
+<text x="159" y="147" font-size="11.5" fill="#12151a">row counter</text>
+<rect x="148" y="166" width="200" height="30" rx="4" fill="#ffffff" stroke="#ccd2dd"/>
+<text x="159" y="185" font-size="11.5" fill="#12151a">run / done flag</text>
+<text x="392" y="42" font-size="10" fill="#12151a">five rules settled as they arrive</text>
+<rect x="392" y="52" width="300" height="30" rx="4" fill="#ffffff" stroke="#ccd2dd"/>
 <text x="403" y="71" font-size="11.5" fill="#12151a">adjacency check</text>
-<text x="403" y="86" font-size="10" fill="#767f90">7 cells, 1 flops</text>
-<text x="403" y="100" font-size="9.5" fill="#767f90">taps 1 and 10-12, masked at row edges</text>
-<rect x="392" y="112" width="300" height="54" rx="4" fill="#ffffff" stroke="#ccd2dd"/>
-<text x="403" y="131" font-size="11.5" fill="#12151a">row accumulator</text>
-<text x="403" y="146" font-size="10" fill="#767f90">9 cells, 3 flops</text>
-<text x="403" y="160" font-size="9.5" fill="#767f90">one-hot, cleared at every row boundary</text>
-<rect x="392" y="172" width="300" height="54" rx="4" fill="#ffffff" stroke="#ccd2dd"/>
-<text x="403" y="191" font-size="11.5" fill="#12151a">column accumulators</text>
-<text x="403" y="206" font-size="10" fill="#767f90">59 cells, 22 flops</text>
-<text x="403" y="220" font-size="9.5" fill="#767f90">11 tallies, 2 bits saturating at 3</text>
-<rect x="392" y="232" width="300" height="54" rx="4" fill="#ffffff" stroke="#ccd2dd"/>
-<text x="403" y="251" font-size="11.5" fill="#12151a">region accumulators</text>
-<text x="403" y="266" font-size="10" fill="#767f90">206 cells, 22 flops</text>
-<text x="403" y="280" font-size="9.5" fill="#767f90">11 tallies, against the hard-wired map</text>
-<rect x="392" y="292" width="300" height="54" rx="4" fill="#ffffff" stroke="#ccd2dd"/>
-<text x="403" y="311" font-size="11.5" fill="#12151a">total-star counter</text>
-<text x="403" y="326" font-size="10" fill="#767f90">22 cells, 8 flops</text>
-<text x="403" y="340" font-size="9.5" fill="#767f90">redundant, and still load-bearing</text>
-<rect x="392" y="376" width="300" height="54" rx="4" fill="#eef4fc" stroke="#2a78d6"/>
-<text x="403" y="395" font-size="11.5" fill="#12151a">success latch</text>
-<text x="403" y="410" font-size="10" fill="#767f90">32 cells, 2 flops</text>
-<text x="403" y="424" font-size="9.5" fill="#767f90">one cycle after the last bit</text>
-<rect x="24" y="376" width="300" height="54" rx="4" fill="#ffffff" stroke="#ccd2dd"/>
-<text x="35" y="395" font-size="11.5" fill="#12151a">output generator</text>
-<text x="35" y="410" font-size="10" fill="#767f90">208 cells, 12 flops (8 LFSR, 4 index)</text>
-<text x="35" y="424" font-size="9.5" fill="#767f90">O = permute(LFSR) xor mask(index), gated by success</text>
-<path d="M116 79 L132 79" stroke="#767f90" stroke-width="1.2" fill="none"/>
-<path d="M132 79 L132 346" stroke="#767f90" stroke-width="1.2" fill="none"/>
-<path d="M132 79 L148 79" stroke="#767f90" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
-<path d="M132 139 L148 139" stroke="#767f90" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
-<path d="M132 199 L148 199" stroke="#767f90" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
-<path d="M132 346 L364 346" stroke="#767f90" stroke-width="1.2" fill="none"/>
-<path d="M364 139 L364 346" stroke="#767f90" stroke-width="1.2" fill="none"/>
-<circle cx="364" cy="346" r="3" fill="#767f90"/>
-<text x="142" y="340" font-size="9.5" fill="#767f90">the bit and its position</text>
-<path d="M348 139 L364 139" stroke="#767f90" stroke-width="1.2" fill="none"/>
-<path d="M348 199 L364 199" stroke="#767f90" stroke-width="1.2" fill="none"/>
-<path d="M364 139 L392 139" stroke="#767f90" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
-<path d="M364 199 L392 199" stroke="#767f90" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
-<path d="M364 259 L392 259" stroke="#767f90" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
-<path d="M364 319 L392 319" stroke="#767f90" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
-<path d="M348 79 L392 79" stroke="#767f90" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
-<text x="354" y="72" font-size="9.5" fill="#767f90">taps</text>
-<path d="M692 79 L716 79" stroke="#767f90" stroke-width="1.2" fill="none"/>
-<path d="M692 139 L716 139" stroke="#767f90" stroke-width="1.2" fill="none"/>
-<path d="M692 199 L716 199" stroke="#767f90" stroke-width="1.2" fill="none"/>
-<path d="M692 259 L716 259" stroke="#767f90" stroke-width="1.2" fill="none"/>
-<path d="M692 319 L716 319" stroke="#767f90" stroke-width="1.2" fill="none"/>
-<path d="M716 79 L716 403" stroke="#767f90" stroke-width="1.2" fill="none"/>
-<path d="M716 403 L692 403" stroke="#767f90" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
-<path d="M392 403 L324 403" stroke="#767f90" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
-<text x="340" y="396" font-size="9.5" fill="#767f90">start</text>
-<text x="24" y="462" font-size="9.5" fill="#767f90">the 15 payload bytes exist nowhere on the die; they appear only as the LFSR walks away from its seed</text>
+<rect x="392" y="90" width="300" height="30" rx="4" fill="#ffffff" stroke="#ccd2dd"/>
+<text x="403" y="109" font-size="11.5" fill="#12151a">row accumulator</text>
+<rect x="392" y="128" width="300" height="30" rx="4" fill="#ffffff" stroke="#ccd2dd"/>
+<text x="403" y="147" font-size="11.5" fill="#12151a">column accumulators</text>
+<rect x="392" y="166" width="300" height="30" rx="4" fill="#ffffff" stroke="#ccd2dd"/>
+<text x="403" y="185" font-size="11.5" fill="#12151a">region accumulators</text>
+<rect x="392" y="204" width="300" height="30" rx="4" fill="#ffffff" stroke="#ccd2dd"/>
+<text x="403" y="223" font-size="11.5" fill="#12151a">total-star counter</text>
+<rect x="392" y="266" width="300" height="30" rx="4" fill="#eef4fc" stroke="#2a78d6"/>
+<text x="403" y="285" font-size="11.5" fill="#12151a">success latch</text>
+<rect x="24" y="266" width="300" height="30" rx="4" fill="#ffffff" stroke="#ccd2dd"/>
+<text x="35" y="285" font-size="11.5" fill="#12151a">output generator</text>
+<path d="M116 67 L132 67" stroke="#767f90" stroke-width="1.2" fill="none"/>
+<path d="M132 67 L132 218" stroke="#767f90" stroke-width="1.2" fill="none"/>
+<path d="M132 67 L148 67" stroke="#767f90" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
+<path d="M132 105 L148 105" stroke="#767f90" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
+<path d="M132 143 L148 143" stroke="#767f90" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
+<path d="M132 218 L364 218" stroke="#767f90" stroke-width="1.2" fill="none"/>
+<path d="M364 105 L364 218" stroke="#767f90" stroke-width="1.2" fill="none"/>
+<circle cx="364" cy="218" r="3" fill="#767f90"/>
+<text x="142" y="212" font-size="9" fill="#12151a">the bit and its position</text>
+<path d="M348 105 L364 105" stroke="#767f90" stroke-width="1.2" fill="none"/>
+<path d="M348 143 L364 143" stroke="#767f90" stroke-width="1.2" fill="none"/>
+<path d="M364 105 L392 105" stroke="#767f90" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
+<path d="M364 143 L392 143" stroke="#767f90" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
+<path d="M364 181 L392 181" stroke="#767f90" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
+<path d="M364 219 L392 219" stroke="#767f90" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
+<path d="M348 67 L392 67" stroke="#767f90" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
+<text x="354" y="61" font-size="9" fill="#12151a">taps</text>
+<path d="M692 67 L716 67" stroke="#767f90" stroke-width="1.2" fill="none"/>
+<path d="M692 105 L716 105" stroke="#767f90" stroke-width="1.2" fill="none"/>
+<path d="M692 143 L716 143" stroke="#767f90" stroke-width="1.2" fill="none"/>
+<path d="M692 181 L716 181" stroke="#767f90" stroke-width="1.2" fill="none"/>
+<path d="M692 219 L716 219" stroke="#767f90" stroke-width="1.2" fill="none"/>
+<path d="M716 67 L716 281" stroke="#767f90" stroke-width="1.2" fill="none"/>
+<path d="M716 281 L692 281" stroke="#767f90" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
+<path d="M392 281 L324 281" stroke="#767f90" stroke-width="1.2" fill="none" marker-end="url(#a)"/>
+<text x="340" y="275" font-size="9" fill="#12151a">start</text>
 </svg>

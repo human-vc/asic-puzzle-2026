@@ -13,7 +13,7 @@ from recovered import DELAY_LINE, TOTAL_COUNTER, N, region_grid
 from sim import Design, BitBackend
 
 INK = (18, 21, 26)
-DIM = (118, 127, 144)
+DIM = INK
 LINE = (204, 210, 221)
 SURF = (251, 252, 253)
 ACCENT = (42, 120, 214)
@@ -43,9 +43,40 @@ def font(size):
     return ImageFont.load_default()
 
 
-F11 = font(11)
-F12 = font(12)
-F13 = font(13)
+SCALE = 2
+
+F11 = font(11 * SCALE)
+F12 = font(12 * SCALE)
+F13 = font(13 * SCALE)
+
+
+class Scaled:
+    """ImageDraw proxy that multiplies coordinates and stroke widths by SCALE"""
+
+    def __init__(self, g, s):
+        self.g, self.s = g, s
+
+    def _xy(self, xy):
+        if isinstance(xy[0], (tuple, list)):
+            return [(x * self.s, y * self.s) for x, y in xy]
+        return [v * self.s for v in xy]
+
+    def _kw(self, kw):
+        if "width" in kw:
+            kw = dict(kw, width=kw["width"] * self.s)
+        return kw
+
+    def rectangle(self, xy, **kw):
+        self.g.rectangle(self._xy(xy), **self._kw(kw))
+
+    def line(self, xy, **kw):
+        self.g.line(self._xy(xy), **self._kw(kw))
+
+    def polygon(self, xy, **kw):
+        self.g.polygon(self._xy(xy), **kw)
+
+    def text(self, xy, *a, **kw):
+        self.g.text(self._xy(xy), *a, **kw)
 
 
 def star_points(cx, cy, r):
@@ -96,8 +127,8 @@ def run(bits, tail):
 
 
 def draw(fr, bits, regions):
-    img = Image.new("RGB", (W, H), SURF)
-    g = ImageDraw.Draw(img)
+    img = Image.new("RGB", (W * SCALE, H * SCALE), SURF)
+    g = Scaled(ImageDraw.Draw(img), SCALE)
 
     cyc, live = fr["cyc"], fr["live"]
     cur = cyc if live else None
@@ -193,7 +224,7 @@ def main():
 
     os.makedirs("figures", exist_ok=True)
     out = "figures/streaming.gif"
-    pal = [im.convert("P", palette=Image.ADAPTIVE, colors=32) for im in imgs]
+    pal = [im.convert("P", palette=Image.ADAPTIVE, colors=64) for im in imgs]
     pal[0].save(out, save_all=True, append_images=pal[1:],
                 duration=durs, loop=0, optimize=True)
     print("wrote %s: %d frames, %.1f s, %d KB"

@@ -14,12 +14,13 @@ import klayout.db as db
 from recovered import MESSAGE, region_grid
 
 INK = "#12151a"
-DIM = "#767f90"
+DIM = "#12151a"
 LINE = "#ccd2dd"
 SURF = "#fbfcfd"
 ACCENT = "#2a78d6"
 STAR = "#eb6834"
-FONT = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif"
+MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
 
 ORDER = ["cell counter (mod 11)", "row counter", "input delay line", "adjacency check",
          "row accumulator", "column accumulators", "region accumulators",
@@ -52,7 +53,6 @@ def floorplan(out="figures/floorplan.svg", cols=5, pw=104, gap=16):
     s = ['<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" '
          'viewBox="0 0 %d %d" font-family="%s">' % (W, H, W, H, FONT)]
     s.append('<rect width="%d" height="%d" fill="%s"/>' % (W, H, SURF))
-    # the grey context is identical in every panel, so store it once
     s.append('<defs><path id="ctx" fill="%s" d="%s"/></defs>'
              % (LINE, "".join(sub(c) for c in allc)))
     s.append('<text x="%d" y="18" font-size="11" fill="%s">every gate placed by probing '
@@ -128,8 +128,8 @@ def morse(out="figures/morse.svg", scale=6.0, h=26):
     for x, w in marks:
         s.append('<rect x="%.2f" y="26" width="%.2f" height="%d" fill="%s"/>'
                  % (P + x * scale, w * scale, h, INK))
-    s.append('<text x="%d" y="%d" font-size="15" fill="%s" letter-spacing="2">'
-             'PER ARENAM AD ASTRA</text>' % (P, h + 52, STAR))
+    s.append('<text x="%d" y="%d" font-size="15" fill="%s" letter-spacing="2" '
+             'font-family="%s">PER ARENAM AD ASTRA</text>' % (P, h + 52, STAR, MONO))
     s.append('</svg>')
     write(out, "\n".join(s))
 

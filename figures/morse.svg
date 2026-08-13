@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1228" height="88" viewBox="0 0 1228 88" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+<svg xmlns="http://www.w3.org/2000/svg" width="1228" height="88" viewBox="0 0 1228 88" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif">
 <rect width="1228" height="88" fill="#fbfcfd"/>
-<text x="14" y="16" font-size="11" fill="#767f90">36 placeholder cells in one row beneath the cell array, in two widths</text>
+<text x="14" y="16" font-size="11" fill="#12151a">36 placeholder cells in one row beneath the cell array, in two widths</text>
 <rect x="21.98" y="26" width="8.28" height="26" fill="#12151a"/>
 <rect x="38.54" y="26" width="24.84" height="26" fill="#12151a"/>
 <rect x="71.66" y="26" width="24.84" height="26" fill="#12151a"/>
@@ -37,5 +37,5 @@
 <rect x="1131.50" y="26" width="8.28" height="26" fill="#12151a"/>
 <rect x="1164.62" y="26" width="8.28" height="26" fill="#12151a"/>
 <rect x="1181.18" y="26" width="24.84" height="26" fill="#12151a"/>
-<text x="14" y="78" font-size="15" fill="#eb6834" letter-spacing="2">PER ARENAM AD ASTRA</text>
+<text x="14" y="78" font-size="15" fill="#eb6834" letter-spacing="2" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">PER ARENAM AD ASTRA</text>
 </svg>
