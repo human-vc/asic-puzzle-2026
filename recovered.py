@@ -12,8 +12,6 @@ CELLS = N * N
 
 MESSAGE = "(* TWO STARS *)"
 
-# The eleven regions, recovered by feeding the chip a single star at each cell
-# and seeing which accumulator moved (regions.py).
 REGION_MAP = """
 A A A A A C C G J J I
 A A D A A C G G J J I
@@ -28,38 +26,33 @@ C C F E E I I I K K K
 C F F E I I I I I I I
 """
 
-# --- the checker -----------------------------------------------------------
-CELL_COUNTER = [38, 84, 45, 73]       # position within a row, weights 1,2,4,8
-ROW_COUNTER = [14, 9, 64, 58]         # which row, weights 1,2,4,8
-RUN_FLAG = [7]                        # set once all 121 cells are consumed
+CELL_COUNTER = [38, 84, 45, 73]
+ROW_COUNTER = [14, 9, 64, 58]
+RUN_FLAG = [7]
 TOGGLE = [61]
 DELAY_LINE = [13, 20, 71, 46, 29, 52, 15, 50, 8, 65, 74, 62]
 ADJACENCY = [28]
-ROW_ACCUM = [68, 88, 81]              # one-hot, cleared every row
+ROW_ACCUM = [68, 88, 81]
 
-# two-bit saturating tallies, one per column and one per region
 COLUMN_ACCUM = [[11, 24], [18, 30], [27, 80], [31, 72], [33, 76], [36, 42],
                 [37, 59], [39, 67], [40, 57], [43, 78], [79, 85]]
 REGION_ACCUM = [[6, 55], [10, 25], [17, 47], [19, 82], [23, 87], [26, 70],
                 [32, 63], [41, 66], [48, 53], [49, 75], [56, 69]]
 
-# total stars seen, as (flop, weight); the 128 bit can never be reached
 TOTAL_COUNTER = [(16, 1), (12, 2), (83, 4), (86, 8), (89, 16), (51, 32),
                  (34, 64), (54, 128)]
 
 SUCCESS = [35, 60]
 
-# --- the output generator --------------------------------------------------
-OUT_INDEX = [0, 1, 2, 91]             # saturating 0..15, the un-reset flops
+OUT_INDEX = [0, 1, 2, 91]
 OUT_LFSR = [3, 4, 5, 21, 22, 44, 77, 90]
 
-# O = permute(LFSR) xor mask(index): each LFSR flop drives exactly one out bit
 LFSR_TO_OUT_BIT = {3: 0, 4: 5, 5: 2, 21: 4, 22: 6, 44: 3, 77: 1, 90: 7}
 
 TOTAL_FLOPS = 92
 
 
-REGION_CELLS = REGION_MAP.split()   # flat, row-major, one letter per cell
+REGION_CELLS = REGION_MAP.split()
 
 
 def region_grid():

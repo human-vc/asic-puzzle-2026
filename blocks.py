@@ -10,8 +10,6 @@ import recovered as rec
 def _flat(pairs):
     return [f for pair in pairs for f in pair]
 
-# Derived from recovered.py so recovered.check()'s partition invariant covers
-# these groups too. Panels merge a few of its groups where the die does.
 FLOP_BLOCKS = {
     "cell counter (mod 11)": rec.CELL_COUNTER,
     "row counter": rec.ROW_COUNTER,
@@ -22,9 +20,7 @@ FLOP_BLOCKS = {
     "row accumulator": rec.ROW_ACCUM,
     "region accumulators": _flat(rec.REGION_ACCUM),
     "success latch": rec.SUCCESS,
-    # Feeds O only. This is the block the puzzle's own hint image boxes off.
     "output generator": rec.OUT_INDEX + rec.OUT_LFSR,
-    # Feeds both the verdict and the output byte, and sits outside that box.
     "total-star counter": [f for f, _w in rec.TOTAL_COUNTER],
 }
 ORDER = list(FLOP_BLOCKS)
@@ -52,8 +48,6 @@ def assign(d):
     for n in succ_cone:
         if n in d.nodes:
             node_blocks.setdefault(n, set()).add("success latch")
-    # Logic in the O cone that also feeds success belongs to the checker, not to
-    # the output generator -- which is exactly where the puzzle's hint draws it.
     for k in range(8):
         seen, _ = cone(d, "net:O[%d]" % k, stop)
         for n in seen:
@@ -69,7 +63,6 @@ def instance_blocks(d, block_of_flop, node_blocks):
         b = block_of_flop.get(i)
         if b:
             out[f[5]] = b
-    # a gate's own internal nodes are named "<instance>/<signal>"
     driver = {}
     for n, blocks in node_blocks.items():
         if "/" in n:

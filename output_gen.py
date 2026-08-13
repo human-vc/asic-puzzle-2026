@@ -17,7 +17,7 @@ import random
 from sim import Design, BitBackend
 from recovered import OUT_INDEX, OUT_LFSR, LFSR_TO_OUT_BIT, MESSAGE
 
-EMIT = len(MESSAGE) + 4        # cycles of emission to watch, past the message
+EMIT = len(MESSAGE) + 4
 
 
 def permute(lfsr_bits):

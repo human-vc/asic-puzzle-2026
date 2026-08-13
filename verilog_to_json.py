@@ -35,8 +35,6 @@ def main(src="puzzle_resynth.v", out="resynth_net.json"):
         conns.setdefault("VGND", "VGND")
         insts.append({"name": name.replace("\\", ""), "cell": cell, "conns": conns})
         n += 1
-    # yosys emits constant / pass-through outputs as assigns; model each as a
-    # buffer so the netlist stays uniform for the simulator.
     for m in re.finditer(r"^\s*assign\s+([^=]+?)\s*=\s*([^;]+?)\s*;", text, re.M):
         lhs, rhs = netname(m.group(1)), netname(m.group(2))
         if not lhs or not rhs:

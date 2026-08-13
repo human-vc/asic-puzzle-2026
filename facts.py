@@ -82,9 +82,6 @@ def main():
         if line.strip().startswith("'"):
             A(("easter egg", line.strip()))
 
-    # These come from other scripts and are repeated here for convenience. They
-    # are NOT re-derived by this file, and are printed under their own heading
-    # so the distinction survives being copied into a document.
     quoted = [
         ("differential grids tested", "37,382 with 0 disagreements (diff_test.py)"),
         ("pin sites both extractors agree on", "5,094 / 741 nets (compare_extractions.py)"),

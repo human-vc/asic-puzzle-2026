@@ -1,6 +1,6 @@
 """Tseitin CNF backend: run the gate-level design symbolically into a SAT formula."""
 
-TRUE = 1   # reserved variable, asserted true
+TRUE = 1
 
 
 class CnfBackend:

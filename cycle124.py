@@ -32,7 +32,7 @@ ARMED = ("        end else if (armed) begin\n"
          "            success_q <= ok_q;\n"
          "        end")
 DEPTH = 145
-JOBS = int(os.environ.get("JOBS", "3"))     # ~2.2 GB of RAM per miter
+JOBS = int(os.environ.get("JOBS", "3"))
 
 
 def immediate_version(src):

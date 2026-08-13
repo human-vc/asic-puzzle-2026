@@ -62,7 +62,6 @@ def main():
     with open("solution_bits.txt", "w") as f:
         f.write("".join(map(str, bits)) + "\n")
 
-    # count solutions (up to a cap) to see whether the answer is unique
     n = 1
     while n < 5:
         s.add_clause([-v if b else v for v, b in zip(gvars, bits)])

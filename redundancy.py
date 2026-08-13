@@ -12,7 +12,7 @@ way of asking which flops the verdict actually depends on.
 from sim import Design, BitBackend
 from recovered import TOTAL_COUNTER, N
 
-AT = (60, 90, 118)      # part-way through the stream, after the counter is moving
+AT = (60, 90, 118)
 
 
 def accepts(d, be, order, bits, flip=None, at=None):

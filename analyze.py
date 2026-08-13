@@ -6,7 +6,7 @@ from sim import Design
 
 
 def build(d):
-    src = {}                       # node -> inputs
+    src = {}
     for n, (prim, ins) in d.nodes.items():
         src[n] = ins
     qnodes = {f[1]: f for f in d.flops}

@@ -17,7 +17,7 @@ class Cell:
         self.base = base
         self.inputs = inputs
         self.outputs = outputs
-        self.ops = ops          # list of (prim, out, [ins]) in source order
+        self.ops = ops
         self.kind = kind
 
     def __repr__(self):

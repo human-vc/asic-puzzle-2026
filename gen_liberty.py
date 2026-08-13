@@ -104,7 +104,7 @@ def main(out="sky130_hd_measured.lib"):
         base = cells_mod.base_name(full)
         cell = lib[base]
         if cell.kind == "none" or base == "conb":
-            continue  # tie cells: yosys emits constants directly
+            continue
         area = ar.get(full, 5.0)
         text.append('  cell (%s) {\n    area : %0.3f;\n' % (full, area))
         if cell.kind in SEQ:

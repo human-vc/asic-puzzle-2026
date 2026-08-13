@@ -25,8 +25,6 @@ def main():
     be = CnfBackend()
     order = [f[1] for f in d.flops]
 
-    # "finished and done emitting", but otherwise unconstrained: this includes
-    # states the design can never reach, which is why the answer below is YES
     state = {q: be.new() for q in order}
     assume = [state[order[DONE]]] + [state[order[f]] for f in IDX]
 
@@ -50,7 +48,6 @@ def main():
         print("  moving flops: %s" % moved[:12])
     s.delete()
 
-    # and with reset asserted it must return to the reset state
     be2 = CnfBackend()
     st2 = {q: be2.new() for q in order}
     nx2, _ = d.step(be2, st2, {"rst_n": be2.zero, "enable": be2.new(),

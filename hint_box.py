@@ -20,8 +20,8 @@ from sim import Design
 from recovered import OUT_INDEX, OUT_LFSR
 
 BLOCK = "output generator"
-DIE_W_UM = 200.0        # the outlined rectangle in layout.png, x = 0..200
-DIE_H_UM = 300.0        # and y = 0..300; the cells below y = 0 are not rendered
+DIE_W_UM = 200.0
+DIE_H_UM = 300.0
 
 
 def measure_png(path="layout.png"):
@@ -33,7 +33,6 @@ def measure_png(path="layout.png"):
     cols = np.flatnonzero(outline.sum(axis=0) > 300)
     die_top, die_bot = rows.min(), rows.max()
     die_right = cols.max()
-    # the left edge is shorter in the render than the right; find it on one row
     mid = im[(die_top + die_bot) // 2]
     die_left = next(x for x in range(im.shape[1]) if mid[x].max() < 200)
 

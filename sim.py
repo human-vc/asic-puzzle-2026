@@ -50,10 +50,10 @@ class Design:
         self.lib = cells_mod.load_cells(pdk_dir)
         self.data = data
 
-        self.nodes = {}        # node id -> (prim, [input node ids])
-        self.flops = []        # (kind, q_node, d_node, clk_node, ctrl_node)
-        self.consts = {}       # node id -> 0/1
-        self.drivers = {}      # net -> node id driving it
+        self.nodes = {}
+        self.flops = []
+        self.consts = {}
+        self.drivers = {}
 
         POWER = {"VPWR": 1, "VGND": 0, "VPB": 1, "VNB": 0}
         self.consts["VPWR"] = 1

@@ -11,7 +11,6 @@ import tempfile
 import cells as cells_mod
 
 SEQ_SEQUENCE = [
-    # (CLK, D, CTRL)  -- CTRL is RESET_B or SET_B; dfxtp ignores it
     (0, 0, 0), (1, 0, 0), (0, 1, 0), (1, 1, 0),
     (0, 1, 1), (1, 1, 1), (0, 0, 1), (1, 0, 1),
     (0, 1, 1), (1, 1, 1), (0, 1, 0), (1, 1, 0),
