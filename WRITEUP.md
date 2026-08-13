@@ -4,9 +4,9 @@ I went in expecting the extraction to be the hard part by a distance. It wasn't,
 and working out what the logic was for took everything after that.
 
 Behind the 728 logic cells on this die sits an 11 by 11 two-star Star Battle
-checker that reads one bit per cycle, retains twelve of them, and still decides
-every rule. It accepts exactly one arrangement, and it releases
-`(* TWO STARS *)` only after that arrangement has cleared every constraint.
+checker that reads one cell per enabled clock, retains twelve of them, and still
+decides every rule. It accepts exactly one arrangement, and it releases `(* TWO
+STARS *)` only after that arrangement has cleared every constraint.
 
 This is the path I took: netlist out of the layout, a simulator built to
 interrogate it, then the architecture itself, three wrong turns, and the
@@ -25,7 +25,7 @@ answer. Everything below reruns from `puzzle.gds`.
 
 | Property | Recovered result |
 |---|---|
-| Input | 121 bits on `I`, row-major, one per enabled clock |
+| Input | 121 bits on `I`, row-major, one cell per enabled clock |
 | Verdict | `success`, one cycle after the final bit |
 | Accepted grids | Exactly one |
 | Payload | 15 bytes on `O[7:0]`: `(* TWO STARS *)` |
@@ -123,13 +123,14 @@ line, which lets it settle every rule as a stream.
 </p>
 
 Adjacency is where that economy shows best, and it was the first block I felt I
-understood. A new star has to be compared against only four earlier positions: the cell immediately to its left and the three above it.
-The other four neighbours arrive later and run the reciprocal check themselves.
-Masking at row edges kills the false neighbours that would otherwise wrap across
-line boundaries, which leaves the complete adjacency test in seven standard
-cells. In the trace below, the star at row 5, column 9 walks down the delay line
-until a second star lands directly beneath it at row 6, column 9. The violation
-latches on the following edge.
+understood. A new star has to be compared against only four earlier positions:
+the cell immediately to its left and the three above it. The other four
+neighbours arrive later and run the reciprocal check themselves. Masking at row
+edges kills the false neighbours that would otherwise wrap across line
+boundaries, which leaves the complete adjacency test in seven standard cells. In
+the trace below, the star at row 5, column 9 walks down the delay line until a
+second star lands directly beneath it at row 6, column 9. The violation latches
+on the following edge.
 
 ```text
 stars at cell 64 (r5c9) and cell 75 (r6c9)
@@ -156,9 +157,9 @@ adjacency      .  .  .  .  .  .  .  .  .  .  .  .  .  1  1
 ```
 
 The same twelve bits are easier to believe in motion. Below, the accepted grid
-streams through the extraction one cell per clock, with the window shown both on
-the grid and as the delay line itself. Every value in the animation is read out
-of the simulated cells, including the verdict at the end.
+streams through the extraction one cell per enabled clock, with the window shown
+both on the grid and as the delay line itself. Every value in the animation is
+read out of the simulated cells, including the verdict at the end.
 
 <p align="center">
   <img src="figures/streaming.gif" width="680" alt="The accepted grid streaming through the recovered chip">
@@ -299,9 +300,10 @@ One oddity I keep coming back to. An eight-bit total-star counter survives in th
 design even though two stars in each of eleven valid rows already forces a total
 of 22. I took it for dead logic and was wrong: it is redundant and still
 load-bearing, and flipping any one of its eight flops midway through the accepted
-run prevented `success` in 24 of 24 injections. Even the unreachable high bit participates, because the final
-comparator tests the whole register against 22. Somebody wrote that comparison in
-the source, and synthesis could not prove it away.
+run prevented `success` in 24 of 24 injections. Even the unreachable high bit
+participates, because the final comparator tests the whole register against 22.
+Somebody wrote that comparison in the source, and synthesis could not prove it
+away.
 
 ## Their hint as a test
 
@@ -317,11 +319,11 @@ to the netlist instance driving that net, and doing it that way places 713 of th
 728. The fifteen I cannot place are all `clkbuf_4` buffers sitting on the clock,
 a net too widely shared to attribute back to any single instance.
 
-I then used their physical clustering as a check I had not rigged myself. The output-generator box
-in the supplied hint contains 207 of the 208 cells assigned to that cone, all 12
-of its flip-flops, no flip-flop from another block, and no unshared cell from
-another block. Only `$296` sits well outside the box, and nothing straddles its
-boundary.
+I then used their physical clustering as a check I had not rigged myself. The
+output-generator box in the supplied hint contains 207 of the 208 cells assigned
+to that cone, all 12 of its flip-flops, no flip-flop from another block, and no
+unshared cell from another block. Only `$296` sits well outside the box, and
+nothing straddles its boundary.
 
 <p align="center">
   <img src="figures/floorplan.svg" width="740" alt="Functional blocks placed on the recovered die">
