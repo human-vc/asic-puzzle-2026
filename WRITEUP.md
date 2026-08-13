@@ -156,14 +156,14 @@ adjacency      .  .  .  .  .  .  .  .  .  .  .  .  .  1  1
 ```
 
 The same twelve bits are easier to believe in motion. Below, the accepted grid
-streams through the extracted netlist one cell per clock, with the window shown
-both on the grid and as the delay line itself. Every value in the animation is
-read out of the extracted netlist, including the verdict at the end.
+streams through the extraction one cell per clock, with the window shown both on
+the grid and as the delay line itself. Every value in the animation is read out
+of the simulated cells, including the verdict at the end.
 
 <p align="center">
   <img src="figures/streaming.gif" width="680" alt="The accepted grid streaming through the recovered chip">
   <br>
-  121 cycles of the real netlist. The four deeper cells are the earlier
+  121 cycles of the recovered silicon. The four deeper cells are the earlier
   neighbours the adjacency check is allowed to see.
 </p>
 
@@ -192,7 +192,7 @@ problem. I unrolled 122 cycles into CNF through the simulator's SAT backend,
 22-star grid shown at the top. My first attempt at this query was unsatisfiable,
 which turned out to be the right answer to the wrong question: the unroll has to
 run one cycle past the grid, because at 121 cycles the verdict has not landed
-yet. Simulating the netlist then pinned the timing exactly.
+yet. Simulating it then pinned the timing exactly.
 
 ```text
 success right after last bit: 0
@@ -241,8 +241,8 @@ consumed the final bit. That belief was lazy in its evidence but not in its
 origin: every simulation I had run against the known-good stream agreed with it,
 and the RTL reproduced the payload byte for byte.
 
-What broke it was bisecting on unroll depth. Equivalence against the extracted
-netlist held all the way to 123 cycles and failed at 124, which placed the
+What broke it was bisecting on unroll depth. Equivalence against the extraction
+held all the way to 123 cycles and failed at 124, which placed the
 disagreement one cycle past the last input rather than anywhere inside the
 stream, and pinning the input to the accepted grid reproduced the failure
 directly. The silicon registers the verdict a cycle later than I had written it,
@@ -399,8 +399,8 @@ sand to the stars." A second message sits in `example_inputs.vcd`: reading each
 row as 7-bit ASCII, least-significant bit in column zero, yields `The night sky
 awaits` with two trailing spaces. Together with the payload, those messages close
 the same chain the technical work builds. A labelled cell library becomes an
-unlabelled netlist, the netlist becomes a streaming Star Battle checker, and only
-then do the gates say what they were arranged to say.
+unlabelled netlist, that becomes a streaming Star Battle checker, and only then
+do the gates say what they were arranged to say.
 
 Every number quoted above has a script behind it, and the whole path from
 `puzzle.gds` to the payload reruns end to end: KLayout and gdstk for the layout,
