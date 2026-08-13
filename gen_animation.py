@@ -28,13 +28,16 @@ GX, GY = 28, 52
 PANEL = 356
 TAPY = 366
 
+SANS = ["/System/Library/Fonts/SFNS.ttf",
+        "/System/Library/Fonts/Helvetica.ttc",
+        "/Library/Fonts/Arial.ttf"]
 FONTS = ["/System/Library/Fonts/Menlo.ttc",
          "/System/Library/Fonts/SFNSMono.ttf",
          "/Library/Fonts/Menlo.ttc"]
 
 
-def font(size):
-    for path in FONTS:
+def font(size, paths=None):
+    for path in (paths or FONTS):
         if os.path.exists(path):
             try:
                 return ImageFont.truetype(path, size)
@@ -45,9 +48,10 @@ def font(size):
 
 SCALE = 2
 
-F11 = font(11 * SCALE)
-F12 = font(12 * SCALE)
-F13 = font(13 * SCALE)
+F11 = font(11 * SCALE, SANS)
+F12 = font(12 * SCALE, SANS)
+F13 = font(13 * SCALE, SANS)
+F12M = font(12 * SCALE)
 
 
 class Scaled:
@@ -177,7 +181,7 @@ def draw(fr, bits, regions):
         y = py + k * 22
         g.text((px, y), a, font=F12, fill=DIM)
         colour = ACCENT if (a == "success" and fr["success"]) else INK
-        g.text((px + 108, y), b, font=F12, fill=colour)
+        g.text((px + 108, y), b, font=F12M, fill=colour)
 
     ly = py + len(rows) * 22 + 18
     legend = [(COMPARE, "the four earlier neighbours"),
