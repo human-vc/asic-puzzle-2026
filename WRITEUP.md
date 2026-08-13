@@ -1,28 +1,25 @@
 # The chip that never stores the puzzle
 
-Jacob Crainic. Tools: KLayout and gdstk for the layout, python-sat for solving and
-proving, Icarus Verilog and Yosys for independent simulation and equivalence,
-Hardcaml for the second rebuild, and about 4,000 lines of Python written for this
-puzzle. Everything below reruns from `puzzle.gds`; [TOOLCHAIN.md](TOOLCHAIN.md)
-has the commands.
+I went in expecting the extraction to be the wall. It wasn't, and everything
+interesting happened after it. Getting the netlist was the easy half. The work
+was reading a checker back out of it.
 
 Behind the 728 logic cells on this die sits an 11 by 11 two-star Star Battle
 checker that reads one bit per cycle, retains twelve of them, and still decides
 every rule. It accepts exactly one arrangement, and it releases
 `(* TWO STARS *)` only after that arrangement has cleared every constraint.
 
-I went in expecting the extraction to be the wall. It wasn't, and everything
-interesting happened after it. This is the path I took: netlist out of the
-layout, tools built to interrogate it, the machine read out of the gates, three
-wrong turns, and then the answer.
+This is the path I took: netlist out of the layout, a gate-level simulator built
+to interrogate it, the checker read out of the gates, three wrong turns, and then
+the answer. Everything below reruns from `puzzle.gds`.
 
 ![Recovered regions and the unique accepted grid](figures/puzzle.svg)
 
-*The recovered region map and the only accepted grid. Every region is
+The recovered region map and the only accepted grid. Every region is
 4-connected; each row, column, and region contains two stars; no two stars
-touch.*
+touch.
 
-## What the chip turned out to be
+## What the chip is
 
 | Property | Recovered result |
 |---|---|
@@ -42,7 +39,7 @@ recovered predicate had already implied. Throughout this report, an exhaustive
 result carries its bound in the same sentence. A structural reading stays a
 reading, even where later measurements agree with it.
 
-## Getting a netlist out of the layout
+## Getting a netlist
 
 This part was easier than I expected, because the standard-cell master names, the
 pin labels on `li1`, and the top-level port labels on `met3` all survived the
@@ -75,13 +72,13 @@ behaviour, 63 combinational ones matched the SkyWater PDK over every input
 vector, and the three sequential ones ran a directed 16-step clock, reset, and
 set sequence without a mismatch.
 
-## The tools I built
+## The tools
 
 Almost everything after the extraction runs through one gate-level simulator,
 `sim.py`, and the reason it earned that much weight is a single design choice.
 The simulator compiles the extracted netlist once into a topologically ordered
 graph, then evaluates it through a swappable backend. `BitBackend` represents
-each net as a machine word and runs 64 candidate grids at a time. `CnfBackend`
+each net as a 64-bit integer and runs 64 candidate grids at a time. `CnfBackend`
 represents each net as a SAT literal and emits Tseitin clauses instead of
 computing anything. Simulation, the search for an accepting grid, and every
 equivalence proof therefore run over the same gate semantics. A mistake in how I
@@ -105,7 +102,7 @@ The rest is smaller and mostly exists to keep me honest:
 - `starbattle_check.py`, an independent Star Battle solver that knows nothing
   about the netlist, so uniqueness could be confirmed from outside.
 
-## Reading the machine out of the gates
+## Reading the checker
 
 I got the architecture out of the arithmetic before I had properly read a single
 cone. 121 puzzle bits enter the circuit. Only 92 flip-flops exist, and 12 of
@@ -116,8 +113,8 @@ line, which lets the checker settle every rule as a stream.
 
 ![The recovered datapath](figures/datapath.svg)
 
-*The whole machine. One bit enters on the left, and by the time it reaches the
-verdict it has been folded into a twelve-deep window and five small tallies.*
+The whole checker. One bit enters on the left, and by the time it reaches the
+verdict it has been folded into a twelve-deep window and five small tallies.
 
 Adjacency is where that economy shows best, and it was the first block I felt I
 understood. A new star has to be compared against only four earlier positions: the cell immediately to its left and the three above it.
@@ -159,8 +156,8 @@ read out of the gate-level model, including the verdict at the end.
 
 ![The accepted grid streaming through the recovered chip](figures/streaming.gif)
 
-*121 cycles of the real netlist. The four deeper cells are the earlier
-neighbours the adjacency check is allowed to see.*
+121 cycles of the real netlist. The four deeper cells are the earlier
+neighbours the adjacency check is allowed to see.
 
 The counters are just as narrow, for the same reason. Once every row, column, and
 region must hold exactly two stars, no tally ever needs to tell four from five,
@@ -179,9 +176,9 @@ positions and recording which group moved recovered 11 regions whose sizes sum t
 one solution before hitting its cap of five, and matched the grid the chip
 accepts.
 
-## Getting the answer out
+## The answer
 
-By this point I knew what the machine wanted, so getting the grid was a search
+By this point I knew what the checker accepts, so getting the grid was a search
 problem. I unrolled 122 cycles into CNF through the simulator's SAT backend,
 11,970 variables and 39,650 clauses, and the solver came back with the 121-bit,
 22-star grid shown at the top. My first attempt at this query was unsatisfiable,
@@ -229,7 +226,7 @@ resetting to zero and four to one. Those four are the only set-reset flops on th
 die, and they exist to keep the seed away from the all-zero state a shift
 register could never climb out of.
 
-## The cycle I was wrong about
+## Cycle 124
 
 The first readable RTL I wrote asserted the verdict on the same edge that
 consumed the final bit. That belief was lazy in its evidence but not in its
@@ -252,10 +249,10 @@ UNSAT across the full 145-cycle protocol window. Both implementations compute th
 same predicate and differ only in when they latch it, every output is gated by
 `success`, and only one grid is ever accepted, so the sole observable
 counterexample has to be the accepting run. One extra cycle of observation was
-the only thing that could have exposed a timing error on the input I had checked
+all that could have exposed a timing error on the input I had checked
 most carefully.
 
-## Checking I hadn't fooled myself
+## Not just my grid
 
 One accepted input is weak evidence for a recovered specification, especially
 when that same input guided the rebuild, and I did not want the only thing
@@ -292,7 +289,7 @@ and a fixed-point argument failed too, because an arbitrary finished state admit
 unreachable assignments. One extracted net, `$1447`, has no driver and feeds two
 gates in the output path; forcing it to each value in turn changes nothing, and
 the predicate proof stays UNSAT in both directions when it gets a fresh SAT
-variable every cycle. TOOLCHAIN.md records both in full.
+variable every cycle.
 
 One oddity I keep coming back to. An eight-bit total-star counter survives in the
 design even though two stars in each of eleven valid rows already forces a total
@@ -302,9 +299,9 @@ run prevented `success` in 24 of 24 injections. Even the unreachable high bit pa
 comparator tests the whole register against 22. Somebody wrote that comparison in
 the source, and synthesis could not prove it away.
 
-## Putting the blocks back on the die
+## Their hint as a test
 
-Cone membership divided the design into functional blocks, and the blocks then
+Cone membership divided the checker into functional blocks, and the blocks then
 had to be put back on the die. I assumed at first that the netlist and the layout
 enumerate their instances in the same order, which is the kind of assumption that
 costs an afternoon. They do not. Zipping the two lists agrees on the cell master
@@ -326,9 +323,9 @@ boundary.
 
 ![Functional blocks placed on the recovered die](figures/floorplan.svg)
 
-*One panel per recovered block. Blue cells belong to that block, grey cells are
+One panel per recovered block. Blue cells belong to that block, grey cells are
 the rest of the logic, and every cell is placed from the geometry of its output
-pin.*
+pin.
 
 | Block | Cells | Flops | Role |
 |---|---:|---:|---|
@@ -343,13 +340,13 @@ pin.*
 | Success latch | 32 | 2 | Register the final verdict |
 | Output generator | 208 | 12 | Emit the masked message |
 
-*The rows above account for all 92 flip-flops and cover the 713 placed cells. A
-further 124 are shared between cones and 17 resist single attribution.*
+The rows above account for all 92 flip-flops and cover the 713 placed cells. A
+further 124 are shared between cones and 17 resist single attribution.
 
 ## Back to hardware
 
 A rebuild earns more trust when it survives another form, so I wrote the
-recovered machine twice: 169 lines of Verilog and 109 lines of Hardcaml. Bounded
+recovered checker twice: 169 lines of Verilog and 109 lines of Hardcaml. Bounded
 miters against the extracted netlist close for 145 cycles under the operating
 protocol, with 3,100,406 variables and 8,531,120 clauses for Verilog and
 1,831,366 variables and 4,842,030 clauses for Hardcaml. Hardcaml was the natural
@@ -363,7 +360,7 @@ provably equivalent and still disagree about what the circuit is made of.
 
 Packaging the Verilog version behind the Tiny Tapeout interface closed the round
 trip. Its testbench drives only `uio[0]`, reaches `success = 1`, and collects all
-15 payload bytes. At 6,816 µm² against a 160 by 100 µm tile, the design occupies
+15 payload bytes. At 6,816 µm² against a 160 by 100 µm tile, the rebuild occupies
 an estimated 43 percent by cell area. That figure is an area ratio, not an
 OpenLane placement result.
 
@@ -379,16 +376,20 @@ in two widths, and the widths are dots and dashes.
 
 ![Morse code formed by placeholder-cell widths](figures/morse.svg)
 
-*Drawn to scale, the 36 cells below the array decode to `PER ARENAM AD ASTRA`.*
+Drawn to scale, the 36 cells below the array decode to `PER ARENAM AD ASTRA`.
 
 Following the anomaly I had ignored recovered `PER ARENAM AD ASTRA`, "through the
 sand to the stars." A second message sits in `example_inputs.vcd`: reading each
 row as 7-bit ASCII, least-significant bit in column zero, yields `The night sky
 awaits` with two trailing spaces. Together with the payload, those messages close
 the same chain the technical work builds. A labelled cell library becomes an
-unlabelled netlist, the netlist becomes a streaming Star Battle machine, and only
-then does the machine say what its gates were arranged to say.
+unlabelled netlist, the netlist becomes a streaming Star Battle checker, and only
+then do the gates say what they were arranged to say.
 
-Full reproduction, including extraction, simulation, proofs, round-trip
-synthesis, and the scripts behind every quoted number, is documented in
-[TOOLCHAIN.md](TOOLCHAIN.md).
+Every number quoted above has a script behind it, and the whole path from
+`puzzle.gds` to the payload reruns end to end: KLayout and gdstk for the layout,
+python-sat for solving and proving, Icarus Verilog and Yosys for independent
+simulation and equivalence, Hardcaml for the second rebuild, and about 4,000
+lines of Python written for this puzzle.
+
+Jacob Crainic.
