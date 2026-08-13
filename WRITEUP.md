@@ -170,11 +170,7 @@ of the simulated cells, including the verdict at the end.
 The counters are just as narrow, for the same reason. Once every row, column, and
 region must hold exactly two stars, no tally ever needs to tell four from five,
 so saturating two bits at three preserves every decision the final comparator can
-make. A row tally resets at each boundary. Eleven column tallies persist for the
-whole stream. Eleven region tallies follow the hard-wired map. Those choices
-explain the circuit's physical proportions: 59 cells for the column
-accumulators, 206 for the regions, 9 for the current row, and only 7 to enforce
-adjacency.
+make. That economy is what keeps the whole checker inside 92 flip-flops.
 
 The region map was where I first went wrong. The accumulator cones look alike,
 and I named them by inspection, which produced a map that was plausible and
@@ -221,9 +217,8 @@ O = permute(LFSR) XOR mask(index)
 where the fifteen message masks are `4d ad fb 83 13 79 1c b5 79 63 c7 68 93 f5
 8f`, and a final mask, `6a`, occupies the saturated index and parks the output at
 zero. Identical mask bytes at indices 5 and 8 emit different letters, `O` and
-`T`, because the advancing LFSR supplies the difference. No plaintext exists
-anywhere on the die. It materialises only as the LFSR walks away from its reset
-seed.
+`T`, because the advancing LFSR supplies the difference. The text materialises
+only as the LFSR walks away from its reset seed.
 
 Three experiments separate that account from a curve fit. Across all 15 emitted
 bytes, flipping each of the eight LFSR bits moved exactly the one output bit the
@@ -312,12 +307,10 @@ the source, and synthesis could not prove it away.
 
 Cone membership divided the design into functional blocks, and the blocks then
 had to be put back on the die. I assumed at first that the netlist and the layout
-enumerate their instances in the same order, which is the kind of assumption that
-costs an afternoon. They do not. Zipping the two lists agrees on the cell master
-at only 46 of 728 positions, against roughly 29 expected from chance alone given
-how lopsided the library usage is, so the ordering assumption buys almost nothing
-over guessing, and it had already sent me looking for a bug in the cone analysis
-that was never there.
+enumerate their instances in the same order. They do not. Zipping the two lists
+agrees on the cell master at only 46 of 728 positions, against roughly 29
+expected from chance alone, so the assumption buys almost nothing over guessing,
+and it cost me an afternoon looking for a bug that was never there.
 
 What actually works is probing the net at each cell's output pin and matching it
 to the netlist instance driving that net, and doing it that way places 713 of the
@@ -334,7 +327,7 @@ boundary.
   <img src="figures/floorplan.svg" width="740" alt="Functional blocks placed on the recovered die">
   <br>
   One panel per recovered block. Blue cells belong to that block, grey cells are
-  the rest of the logic, and every cell is placed from the geometry of its output pin.
+  the rest of the logic.
 </p>
 
 <div align="center">
@@ -354,8 +347,8 @@ boundary.
 
 </div>
 
-The rows above account for all 92 flip-flops and cover the 713 placed cells. A
-further 124 are shared between cones and 17 resist single attribution.
+The rows account for all 92 flip-flops. A further 124 cells are shared between
+cones and 17 resist single attribution.
 
 ## Back to hardware
 
