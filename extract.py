@@ -91,7 +91,32 @@ def dump(netlist, out_json):
     return data
 
 
+def control(gds="warmup/04_final.gds", shipped="warmup/01_netlist.v"):
+    """Run the same extraction on the warm-up, whose netlist Jane Street ships.
+
+    The cell histograms must match exactly. This is the only place the method
+    can be checked against a ground truth rather than against itself.
+    """
+    import collections
+    import re
+    import tempfile
+
+    _l2n, netlist = extract(gds)
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+        data = dump(netlist, f.name)
+    mine = collections.Counter(i["cell"] for i in data["instances"]
+                               if i["cell"].startswith("sky130"))
+    theirs = collections.Counter(
+        re.findall(r"\b(sky130_fd_sc_hd__\w+)\s+\S+\s*\(", open(shipped).read()))
+    print("extracted: %d cell types, %d instances" % (len(mine), sum(mine.values())))
+    print("shipped:   %d cell types, %d instances" % (len(theirs), sum(theirs.values())))
+    print("histograms identical:", mine == theirs)
+    return mine == theirs
+
+
 if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "control":
+        raise SystemExit(0 if control() else 1)
     gds, out = sys.argv[1], sys.argv[2]
     l2n, netlist = extract(gds)
     data = dump(netlist, out)
