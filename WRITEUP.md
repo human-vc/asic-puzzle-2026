@@ -9,8 +9,8 @@ every rule. It accepts exactly one arrangement, and it releases
 `(* TWO STARS *)` only after that arrangement has cleared every constraint.
 
 This is the path I took: netlist out of the layout, a gate-level simulator built
-to interrogate it, the architecture recovered from the gates, three wrong turns,
-and then the answer. Everything below reruns from `puzzle.gds`.
+to interrogate it, then the architecture itself, three wrong turns, and the
+answer. Everything below reruns from `puzzle.gds`.
 
 <p align="center">
   <img src="figures/puzzle.svg" width="460" alt="Recovered regions and the unique accepted grid">
